@@ -4,6 +4,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { AuthModule } from './auth/auth.module';
+import { EquiposModule } from './equipos/equipos.module';
+import { CategoriasModule } from './categorias/categorias.module';
+import { DirigentesModule } from './dirigentes/dirigentes.module';
+import { ArbitrosModule } from './arbitros/arbitros.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsuariosModule,
     AuthModule,
+    EquiposModule,
+    CategoriasModule,
+    DirigentesModule,
+    ArbitrosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
