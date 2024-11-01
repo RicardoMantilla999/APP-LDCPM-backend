@@ -47,6 +47,37 @@ export class EquiposService {
       relations: ['categoria', 'dirigente'], // Relación con la categoría
     });
   }
+
+  async findAllEquipos() {
+    return await this.equipoRepository.find({
+      relations: ['categoria', 'dirigente'], // Relaciones con categoria y dirigente
+      select: {
+        id: true, // id del equipo
+        nombre: true, // nombre del equipo
+        categoria: {
+          categoria: true, // solo el nombre de la categoría
+        },
+        dirigente: {
+          nombres: true, // solo el nombre del dirigente
+        },
+      },
+    });
+  }
+  
+  async findEquiposFull() {
+    return await this.equipoRepository
+      .createQueryBuilder('equipo')
+      .leftJoinAndSelect('equipo.categoria', 'categoria')
+      .leftJoinAndSelect('equipo.dirigente', 'dirigente')
+      .select([
+        'equipo.nombre', // selecciona el ID del equipo
+        'equipo.uniforme', // selecciona el nombre del equipo
+        'equipo.fecha_fundacion',
+        'categoria.categoria', // selecciona solo el nombre de la categoría
+        'dirigente.nombres', // selecciona solo el nombre del dirigente
+      ])
+      .getMany();
+  }
  
 
 

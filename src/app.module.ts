@@ -8,6 +8,7 @@ import { EquiposModule } from './equipos/equipos.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { DirigentesModule } from './dirigentes/dirigentes.module';
 import { ArbitrosModule } from './arbitros/arbitros.module';
+import { JugadoresModule } from './jugadores/jugadores.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ArbitrosModule } from './arbitros/arbitros.module';
     CategoriasModule,
     DirigentesModule,
     ArbitrosModule,
+    JugadoresModule,
   ],
   controllers: [AppController],
   providers: [AppService],

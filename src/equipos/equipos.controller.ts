@@ -13,8 +13,13 @@ export class EquiposController {
   }
 
   @Get()
-  findAll() {
+  findAllE() {
     return this.equiposService.findAll();
+  }
+
+  @Get('/full')
+  findAll() {
+    return this.equiposService.findEquiposFull();
   }
 
   @Get(':id')

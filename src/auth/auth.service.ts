@@ -32,12 +32,12 @@ export class AuthService {
     async login({ username, password }: LoginDto) {
         const usuario = await this.usuariosService.findByUsernameWithPassword(username);
         if (!usuario) {
-            throw new UnauthorizedException('Usuario incorrecto');
+            throw new UnauthorizedException('Usuario '+username+' No Existe');
         }
 
         const isPasswordValid = await bcryptjs.compare(password, usuario.password);
         if (!isPasswordValid) {
-            throw new UnauthorizedException('password incorrecta');
+            throw new UnauthorizedException('Contraseña Incorrecta');
         }
 
         const payload = { username: usuario.username, rol: usuario.rol };
