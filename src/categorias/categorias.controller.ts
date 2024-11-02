@@ -17,6 +17,12 @@ export class CategoriasController {
     return this.categoriasService.findAll();
   }
 
+  @Get('/count')
+  contarCategorias(){
+    return this.categoriasService.contarCategorias();
+  }
+
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoriasService.findOne(+id);

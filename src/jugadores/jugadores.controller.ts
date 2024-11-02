@@ -17,6 +17,11 @@ export class JugadoresController {
     return this.jugadoresService.findAll();
   }
 
+  @Get('/count')
+  contarJugadores(){
+    return this.jugadoresService.contarJugadores();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.jugadoresService.findOne(+id);

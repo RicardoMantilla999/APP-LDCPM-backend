@@ -17,6 +17,11 @@ export class DirigentesController {
     return this.dirigentesService.findAll();
   }
 
+  @Get('/count')
+  contarDirigentes(){
+    return this.dirigentesService.contarDirigentes();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.dirigentesService.findOne(+id);

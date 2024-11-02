@@ -36,6 +36,11 @@ export class JugadoresService {
     return await this.jugadorRepository.find();
   }
 
+  async contarJugadores(){
+    const count = await this.jugadorRepository.count();
+    return count;
+  }
+
   async findOne(id: number) {
     return await this.jugadorRepository.findOneBy({id});
   }

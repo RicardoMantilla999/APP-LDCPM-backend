@@ -63,6 +63,8 @@ export class EquiposService {
       },
     });
   }
+
+
   
   async findEquiposFull() {
     return await this.equipoRepository
@@ -114,5 +116,11 @@ export class EquiposService {
 
   async remove(id: number) {
     return await this.equipoRepository.softDelete({ id });
+  }
+
+
+  async contarEquipos(){
+    const count = await this.equipoRepository.count();
+    return count;
   }
 }

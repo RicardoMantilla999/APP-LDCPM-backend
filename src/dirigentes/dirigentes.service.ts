@@ -22,6 +22,11 @@ export class DirigentesService {
     return await this.dirigenteRepository.find();
   }
 
+  async contarDirigentes(){
+    const count = await this.dirigenteRepository.count();
+    return count;
+  }
+
   async findOne(id: number) {
     return await this.dirigenteRepository.findOneBy({id});
   }

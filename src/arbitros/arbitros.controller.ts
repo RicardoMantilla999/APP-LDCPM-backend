@@ -17,6 +17,11 @@ export class ArbitrosController {
     return this.arbitrosService.findAll();
   }
 
+  @Get('/count')
+  contarArbitros(){
+    return this.arbitrosService.contarArbitros();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.arbitrosService.findOne(+id);

@@ -26,6 +26,12 @@ export class CategoriasService {
     return await this.categoriaRepository.findOneBy({id});
   }
 
+  async contarCategorias(){
+    const count = await this.categoriaRepository.count();
+    return count;
+  }
+
+
   async update(id: number, updateCategoriaDto: UpdateCategoriaDto) {
     return await this.categoriaRepository.update(id, updateCategoriaDto);
   }

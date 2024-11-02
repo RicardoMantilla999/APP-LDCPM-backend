@@ -13,14 +13,20 @@ export class EquiposController {
   }
 
   @Get()
-  findAllE() {
+  findAll() {
     return this.equiposService.findAll();
   }
 
   @Get('/full')
-  findAll() {
+  findAllE() {
     return this.equiposService.findEquiposFull();
   }
+
+  @Get('/count')
+  contarEquipos(){
+    return this.equiposService.contarEquipos();
+  }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

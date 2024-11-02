@@ -20,6 +20,11 @@ export class ArbitrosService {
     return await this.arbitroRepository.find();
   }
 
+  async contarArbitros(){
+    const count = await this.arbitroRepository.count();
+    return count;
+  }
+
   async findOne(id: number) {
     return await this.arbitroRepository.findOneBy({id});
   }
