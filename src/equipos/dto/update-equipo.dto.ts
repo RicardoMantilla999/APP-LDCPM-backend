@@ -6,6 +6,9 @@ import { Type } from 'class-transformer';
 export class UpdateEquipoDto extends PartialType(CreateEquipoDto) {
 
     @IsOptional()
+    id?: number;
+
+    @IsOptional()
     @IsString()
     nombre?: string;
   

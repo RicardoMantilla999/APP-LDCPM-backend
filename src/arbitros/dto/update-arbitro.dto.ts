@@ -3,29 +3,33 @@ import { CreateArbitroDto } from './create-arbitro.dto';
 import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class UpdateArbitroDto extends PartialType(CreateArbitroDto) {
+
+    @IsOptional()
+    id?: number;
+    
     @IsString()
     @IsOptional()
-    cedula: string;
+    cedula?: string;
 
     @IsString()
     @IsOptional()
-    nombres: string;
+    nombres?: string;
 
     @IsString()
     @IsOptional()
-    apellidos: string;
+    apellidos?: string;
 
     @IsString()
     @IsOptional()
-    telefono: string;
+    telefono?: string;
 
     @IsEmail()
     @IsOptional()
-    email: string;
+    email?: string;
 
     @IsString()
     @IsOptional()
-    direccion: string;
+    direccion?: string;
 
     /**
     imagen: string;

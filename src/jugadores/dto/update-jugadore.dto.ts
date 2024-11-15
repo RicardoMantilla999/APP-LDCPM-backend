@@ -5,6 +5,8 @@ import { Type } from 'class-transformer';
 
 export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
 
+    @IsOptional()
+    id?: number;
 
     @IsOptional()
     @IsString()

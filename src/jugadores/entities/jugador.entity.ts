@@ -1,5 +1,5 @@
 import { Equipo } from "src/equipos/entities/equipo.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Jugador {
@@ -19,8 +19,9 @@ export class Jugador {
     @Column()
     dorsal: number;
 
-    @Column()
+    @Column({type: 'date', nullable:true})
     fecha_nacimiento: Date;
+
 
     @Column()
     lugar_nacimiento: string;
@@ -31,8 +32,9 @@ export class Jugador {
     @Column()
     suspendido?: boolean = false;
 
-    @ManyToOne(()=> Equipo, (equipo) => equipo.nombre)
+    @ManyToOne(()=> Equipo, (equipo) => equipo.nombre,{eager: true})
     equipo: Equipo; 
 
-
+    @DeleteDateColumn()  // Asegúrate de tener esta columna
+    deletedAt: Date;
 }

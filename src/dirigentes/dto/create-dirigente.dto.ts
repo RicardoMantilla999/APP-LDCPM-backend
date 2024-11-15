@@ -1,4 +1,5 @@
-import { IsBoolean, IsEmpty, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsBoolean, IsDate, IsEmpty, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateDirigenteDto {
 
@@ -21,13 +22,14 @@ export class CreateDirigenteDto {
     @IsNotEmpty()
     lugar_nacimiento: string;
 
-    @IsString()
     @IsNotEmpty()
-    fecha_nacimiento: string;
+    @IsDate()
+    @Type(() => Date)
+    fecha_nacimiento: Date;
 
     @IsBoolean()
     @IsOptional()
-    suspendido: boolean = false;
+    suspendido?: boolean = false;
 
 
 }

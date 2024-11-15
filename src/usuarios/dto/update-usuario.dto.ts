@@ -4,6 +4,9 @@ import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
 
+    @IsOptional()
+    id?: number;
+
     @IsString()
     @MinLength(1)
     @IsOptional()

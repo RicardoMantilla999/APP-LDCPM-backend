@@ -37,6 +37,6 @@ export class CategoriasService {
   }
 
   async remove(id: number) {
-    return await this.categoriaRepository.softDelete({id});
+    return await this.categoriaRepository.softDelete(id);
   }
 }

@@ -4,13 +4,16 @@ import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
 
+    @IsOptional()
+    id?: number;
+
     @IsString()
     @MinLength(1)
     @IsOptional()
-    categoria: string;
+    categoria?: string;
 
     @IsString()
     @IsOptional()
-    descripcion: string;
+    descripcion?: string;
 
 }

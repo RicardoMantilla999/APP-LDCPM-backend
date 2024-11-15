@@ -1,36 +1,40 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateDirigenteDto } from './create-dirigente.dto';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateDirigenteDto extends PartialType(CreateDirigenteDto) {
 
-    
-    @IsString()
     @IsOptional()
-    cedula: string;
-    
-    @IsString()
-    @IsOptional()
-    nombres: string;
+    id?: number;
 
     @IsString()
     @IsOptional()
-    apellidos: string;
+    cedula?: string;
+    
+    @IsString()
+    @IsOptional()
+    nombres?: string;
+
+    @IsString()
+    @IsOptional()
+    apellidos?: string;
 
     /**
     equispo: 
      */
     @IsString()
     @IsOptional()
-    lugar_nacimiento: string;
+    lugar_nacimiento?: string;
 
-    @IsString()
     @IsOptional()
-    fecha_nacimiento: string;
+    @IsDate()
+    @Type(() => Date)
+    fecha_fundacion?: Date;
 
     @IsBoolean()
     @IsOptional()
-    suspendido: boolean = false;
+    suspendido?: boolean = false;
 
 
 }
