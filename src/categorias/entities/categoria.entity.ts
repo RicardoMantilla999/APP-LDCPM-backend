@@ -6,13 +6,13 @@ export class Categoria {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ unique: true, nullable: false })
+    @Column()
     categoria: string;
 
     @Column()
     descripcion: string;
 
-    @DeleteDateColumn()  // Asegúrate de tener esta columna
+    @DeleteDateColumn() 
     deletedAt: Date;
 
 }

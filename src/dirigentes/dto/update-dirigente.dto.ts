@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateDirigenteDto } from './create-dirigente.dto';
-import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsBoolean, IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class UpdateDirigenteDto extends PartialType(CreateDirigenteDto) {
 
@@ -9,28 +9,34 @@ export class UpdateDirigenteDto extends PartialType(CreateDirigenteDto) {
     id?: number;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({ message: 'Cédula no puede ser vacío' })
     cedula?: string;
     
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({ message: 'Nombres no puede ser vacío' })
+    @Transform(({ value }) => value?.toUpperCase()) 
     nombres?: string;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({ message: 'Apellidos no puede ser vacío' })
+    @Transform(({ value }) => value?.toUpperCase()) 
     apellidos?: string;
 
+    @IsString()
+    @IsNotEmpty({ message: 'Teléfono no puede ser vacío' })
+    telefono?: string;
     /**
     equispo: 
      */
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({ message: 'Lugar de nacimiento no puede ser vacío' })
+    @Transform(({ value }) => value?.toUpperCase()) 
     lugar_nacimiento?: string;
 
-    @IsOptional()
+    @IsNotEmpty({ message: 'Elija la fecha de nacimiento' })
     @IsDate()
     @Type(() => Date)
-    fecha_fundacion?: Date;
+    fecha_nacimiento?: string;
 
     @IsBoolean()
     @IsOptional()

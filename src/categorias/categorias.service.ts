@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCategoriaDto } from './dto/create-categoria.dto';
 import { UpdateCategoriaDto } from './dto/update-categoria.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,7 +15,21 @@ export class CategoriasService {
   ){}
 
   async create(createCategoriaDto: CreateCategoriaDto) {
-    return await this.categoriaRepository.save(createCategoriaDto);
+    const { categoria } = createCategoriaDto;
+
+    // Verificar si ya existe una categoría con el mismo nombre
+    const categoriaExistente = await this.categoriaRepository.findOne({
+      where: { categoria },
+    });
+
+    if (categoriaExistente) {
+      throw new BadRequestException('La categoría: '+categoriaExistente.categoria+ ' ya existe.' );
+    }
+
+    // Crear y guardar la nueva categoría
+    const nuevaCategoria = this.categoriaRepository.create(createCategoriaDto);
+    return await this.categoriaRepository.save(nuevaCategoria);
+  
   }
 
   async findAll() {

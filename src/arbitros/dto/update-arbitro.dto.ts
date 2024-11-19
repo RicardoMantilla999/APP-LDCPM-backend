@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateArbitroDto } from './create-arbitro.dto';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateArbitroDto extends PartialType(CreateArbitroDto) {
 
@@ -8,27 +9,33 @@ export class UpdateArbitroDto extends PartialType(CreateArbitroDto) {
     id?: number;
     
     @IsString()
-    @IsOptional()
+    @IsNotEmpty()
+    @MinLength(10, { message: 'La cédula debe contener 10 dígitos' })
+    @MaxLength(10, { message: 'La cédula debe contener 10 dígitos' })
+    @Matches(/^[0-9]+$/, { message: 'La cédula debe contener solo dígitos' })
     cedula?: string;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({message:'Los Nombres son obligatorios'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     nombres?: string;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({message:'Los Apellidos son obligatorios'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     apellidos?: string;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({message:'El telefono es obligatorio'})
     telefono?: string;
 
-    @IsEmail()
-    @IsOptional()
+    @IsEmail({},{message:'El Email No es válido'})
+    @IsNotEmpty({message:'El Email es obligatorio'})
     email?: string;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({message:'La Dirección es obligatoria'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     direccion?: string;
 
     /**

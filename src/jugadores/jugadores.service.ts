@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateJugadoreDto } from './dto/create-jugadore.dto';
 import { UpdateJugadoreDto } from './dto/update-jugadore.dto';
 import { Jugador } from './entities/jugador.entity';
@@ -12,37 +12,49 @@ export class JugadoresService {
 
   constructor(
     @InjectRepository(Jugador)
-    private readonly jugadorRepository:Repository<Jugador>,
+    private readonly jugadorRepository: Repository<Jugador>,
     @InjectRepository(Equipo)
-    private readonly equipoRepository:Repository<Equipo>,
-  ){}
+    private readonly equipoRepository: Repository<Equipo>,
+  ) { }
 
   async create(createJugadoreDto: CreateJugadoreDto) {
     const equipo = await this.equipoRepository.findOneBy({
       id: createJugadoreDto.equipo,
-    }); 
-    if(!equipo){
+    });
+    if (!equipo) {
       throw new NotFoundException('Equipo no encontrado');
-    } 
-    
+    }
 
-    const jugador = this.jugadorRepository.create({ ...createJugadoreDto, equipo});
+    const { cedula } = createJugadoreDto;
 
-    return this.jugadorRepository.save(jugador);
+    // Verificar si ya existe una categoría con el mismo nombre
+    const jugadorExistente = await this.jugadorRepository.findOne({
+      where: { cedula },
+    });
+
+    if (jugadorExistente) {
+      throw new BadRequestException('La cédula: ' + jugadorExistente.cedula + ' ya existe.');
+    }
+
+    // Crear y guardar la nueva categoría
+    const jugador = this.jugadorRepository.create({ ...createJugadoreDto, equipo });
+    //return await this.categoriaRepository.save(nuevaCategoria);
+    return await this.jugadorRepository.save(jugador);
+
   }
-  
+
 
   async findAll() {
     return await this.jugadorRepository.find();
   }
 
-  async contarJugadores(){
+  async contarJugadores() {
     const count = await this.jugadorRepository.count();
     return count;
   }
 
   async findOne(id: number) {
-    return await this.jugadorRepository.findOneBy({id});
+    return await this.jugadorRepository.findOneBy({ id });
   }
 
   async update(id: number, updateJugadorDto: UpdateJugadoreDto) {
@@ -57,7 +69,7 @@ export class JugadoresService {
       const equipo = await this.equipoRepository.findOne({
         where: { id: updateJugadorDto.equipo },
       });
-      if (!equipo){
+      if (!equipo) {
         throw new NotFoundException(`Equipo con ID ${updateJugadorDto.equipo} No encontrado`);
       }
       jugador.equipo = equipo;
@@ -68,4 +80,12 @@ export class JugadoresService {
   async remove(id: number) {
     return await this.jugadorRepository.softDelete(id);
   }
+
+  async filtrarJugadoresByEquipo(equipoId: number): Promise<Jugador[]> {
+    return this.jugadorRepository.find({
+      where: { equipo: { id: equipoId } }, // Filtra por equipo ID
+      relations: ['equipo'], // Incluye la relación con el equipo
+    });
+  }
+
 }

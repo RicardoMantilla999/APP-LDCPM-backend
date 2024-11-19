@@ -17,9 +17,9 @@ export class EquiposController {
     return this.equiposService.findAll();
   }
 
-  @Get('/full')
-  findAllE() {
-    return this.equiposService.findEquiposFull();
+  @Get('/bycategoria/:id')
+  filtrarEquiposByCategoria(@Param('id') id: string) {
+    return this.equiposService.filtrarEquiposByCategoria(+id);
   }
 
   @Get('/count')

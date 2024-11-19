@@ -16,6 +16,9 @@ export class Dirigente {
     @Column()
     apellidos: string;
 
+    @Column({nullable:true})
+    telefono: string;
+
     /**
     equispo: 
      */

@@ -1,24 +1,26 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { IsDate, IsNotEmpty, IsString } from "class-validator";
 
 export class CreateEquipoDto {
 
   
-    @IsNotEmpty()
+    @IsNotEmpty({message:'El Nombre es obligatorio'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     @IsString()
     nombre: string;
   
-    @IsNotEmpty()
+    @IsNotEmpty({message:'El Uniforme es obligatorio'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     @IsString()
     uniforme: string;
   
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Elija la Categoría'})
     categoria: number; // Se espera el ID de `Categoria`
   
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Elija el Dirigente'})
     dirigente: number; // Se espera el ID de `Dirigente`
   
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Elija la Fecha de Fundación'})
     @IsDate()
     @Type(() => Date)
     fecha_fundacion: Date;

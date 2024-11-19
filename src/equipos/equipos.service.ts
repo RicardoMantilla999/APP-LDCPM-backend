@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,24 +22,47 @@ export class EquiposService {
   ) { }
 
   async create(createEquipoDto: CreateEquipoDto) {
+    // Verificar si la categoría existe
     const categoria = await this.categoriaRepository.findOneBy({
       id: createEquipoDto.categoria,
     });
-    const dirigente = await this.dirigenteRepository.findOne({
-      where: { id: createEquipoDto.dirigente }
-    })
-    if(!categoria){
-      throw new NotFoundException('Categoria no encontrada');
-    } 
-    if(!dirigente){
-      throw new NotFoundException('Dirigente no encontrado');
-    } 
-    
+    if (!categoria) {
+      throw new NotFoundException('Categoría no encontrada');
+    }
 
-    const equipo = this.equipoRepository.create({ ...createEquipoDto, categoria, dirigente });
+    // Verificar si el dirigente existe
+    const dirigente = await this.dirigenteRepository.findOne({
+      where: { id: createEquipoDto.dirigente },
+    });
+    if (!dirigente) {
+      throw new NotFoundException('Dirigente no encontrado');
+    }
+
+    // Verificar si ya existe un equipo con el mismo nombre en la misma categoría
+    const equipoExistente = await this.equipoRepository.findOne({
+      where: {
+        nombre: createEquipoDto.nombre,
+        categoria: { id: createEquipoDto.categoria },
+      },
+      relations: ['categoria'], // Para asegurarte de que las relaciones se resuelvan correctamente
+    });
+
+    if (equipoExistente) {
+      throw new BadRequestException(
+        "El equipo" +createEquipoDto.nombre +" ya existe en la categoría "+categoria.categoria+ "."
+      );
+    }
+
+    // Crear y guardar el nuevo equipo
+    const equipo = this.equipoRepository.create({
+      ...createEquipoDto,
+      categoria,
+      dirigente,
+    });
 
     return this.equipoRepository.save(equipo);
   }
+
 
 
   async findAll() {
@@ -65,7 +88,7 @@ export class EquiposService {
   }
 
 
-  
+
   async findEquiposFull() {
     return await this.equipoRepository
       .createQueryBuilder('equipo')
@@ -80,7 +103,7 @@ export class EquiposService {
       ])
       .getMany();
   }
- 
+
 
 
   async findOne(id: number) {
@@ -101,12 +124,12 @@ export class EquiposService {
         where: { id: updateEquipoDto.categoria },
       });
       const dirigente = await this.dirigenteRepository.findOne({
-        where: {id: updateEquipoDto.dirigente}
+        where: { id: updateEquipoDto.dirigente }
       })
       if (!categoria) {
         throw new NotFoundException(`Categoria with ID ${updateEquipoDto.categoria} not found`);
       }
-      if (!dirigente){
+      if (!dirigente) {
         throw new NotFoundException(`Dirigente with ID ${updateEquipoDto.dirigente} not found`);
       }
       equipo.categoria = categoria;
@@ -119,8 +142,17 @@ export class EquiposService {
   }
 
 
-  async contarEquipos(){
+  async contarEquipos() {
     const count = await this.equipoRepository.count();
     return count;
   }
+
+  async filtrarEquiposByCategoria(categoriaId: number): Promise<Equipo[]> {
+    return this.equipoRepository.find({
+      where: { categoria: { id: categoriaId } },
+      relations: ['categoria'], // Incluye la relación con la categoría
+    });
+  }
+  
+
 }

@@ -26,8 +26,6 @@ export class Jugador {
     @Column()
     lugar_nacimiento: string;
 
-    @Column()
-    direccion: string;
 
     @Column()
     suspendido?: boolean = false;

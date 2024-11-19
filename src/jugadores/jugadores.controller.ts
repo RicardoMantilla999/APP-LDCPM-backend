@@ -5,7 +5,7 @@ import { UpdateJugadoreDto } from './dto/update-jugadore.dto';
 
 @Controller('jugadores')
 export class JugadoresController {
-  constructor(private readonly jugadoresService: JugadoresService) {}
+  constructor(private readonly jugadoresService: JugadoresService) { }
 
   @Post()
   create(@Body() createJugadoreDto: CreateJugadoreDto) {
@@ -18,7 +18,7 @@ export class JugadoresController {
   }
 
   @Get('/count')
-  contarJugadores(){
+  contarJugadores() {
     return this.jugadoresService.contarJugadores();
   }
 
@@ -26,6 +26,12 @@ export class JugadoresController {
   findOne(@Param('id') id: string) {
     return this.jugadoresService.findOne(+id);
   }
+
+  @Get('/byequipo/:id')
+  filtrarJugadoresByEquipo(@Param('id') id: string) {
+    return this.jugadoresService.filtrarJugadoresByEquipo(+id);
+  }
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateJugadoreDto: UpdateJugadoreDto) {

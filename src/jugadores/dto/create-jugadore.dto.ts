@@ -1,4 +1,4 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
 import { ManyToOne } from "typeorm";
 
@@ -6,45 +6,41 @@ export class CreateJugadoreDto {
 
     @IsNotEmpty()
     @IsString()
-    @MinLength(10)
-    @MaxLength(10)
+    @MinLength(10, { message: 'La cédula debe contener 10 dígitos' })
+    @MaxLength(10, { message: 'La cédula debe contener 10 dígitos' })
     @Matches(/^[0-9]+$/, { message: 'La cédula debe contener solo dígitos' })
     cedula: string
 
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Los Nombres son obligatorios'})
     @IsString()
-    @MinLength(5)
+    @MinLength(4,{message:'Ingrese dos Nombres'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     nombres: string;
 
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Los Apellidos son obligatorios'})
     @IsString()
-    @MinLength(5)
+    @MinLength(4, {message:'Ingrese dos Apellidos'})
+    @Transform(({ value }) => value?.toUpperCase()) 
     apellidos: string;
 
-    @IsNotEmpty()
+    @IsNotEmpty({message:'El Dorsal es obligatorio'})
     @IsNumber()
     dorsal: number;
 
-    @IsNotEmpty()
-    @IsDate()
+    @IsNotEmpty({message:'Elija La Fecha de Nacimiento'})
     @Type(() => Date) 
     fecha_nacimiento: Date;
 
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Lugar de Nacimiento es obligatorio'})
     @IsString()
-    @MinLength(5)
+    @Transform(({ value }) => value?.toUpperCase()) 
     lugar_nacimiento: string;
-
-    @IsNotEmpty()
-    @IsString()
-    @MinLength(5)
-    direccion: string;
 
     @IsBoolean()
     @IsOptional()
     suspendido?: boolean = false;
 
-    @IsNotEmpty()
+    @IsNotEmpty({message:'Elija el Equipo'})
     @IsNumber()
     equipo: number;
 

@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateCategoriaDto } from './create-categoria.dto';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
 
@@ -8,12 +9,12 @@ export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
     id?: number;
 
     @IsString()
-    @MinLength(1)
-    @IsOptional()
+    @IsNotEmpty({ message: 'La categoría es obligatoria' })
+    @Transform(({ value }) => value?.toUpperCase()) 
     categoria?: string;
 
     @IsString()
-    @IsOptional()
+    @IsNotEmpty({ message: 'La descripciónn es obligatoria' })
     descripcion?: string;
 
 }
