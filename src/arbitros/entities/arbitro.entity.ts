@@ -1,4 +1,5 @@
-import { Column, DeleteDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Campeonato } from "src/campeonatos/entities/campeonato.entity";
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Arbitro {
@@ -29,7 +30,8 @@ export class Arbitro {
 
      */
 
-    @DeleteDateColumn()  // Asegúrate de tener esta columna
-    deletedAt: Date;
+    @ManyToOne(() => Campeonato, (campeonato) => campeonato.arbitros, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'campeonato_id' })
+    campeonato: Campeonato;
 
 }

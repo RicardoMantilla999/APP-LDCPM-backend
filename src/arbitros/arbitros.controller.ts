@@ -12,14 +12,14 @@ export class ArbitrosController {
     return this.arbitrosService.create(createArbitroDto);
   }
 
-  @Get()
-  findAll() {
-    return this.arbitrosService.findAll();
+  @Get('bycampeonato/:id')
+  findAll(@Param('id') id: string) {
+    return this.arbitrosService.findAll(+id);
   }
 
-  @Get('/count')
-  contarArbitros(){
-    return this.arbitrosService.contarArbitros();
+  @Get('/count/:id')
+  contarArbitros(@Param('id') id: string){
+    return this.arbitrosService.contarArbitros(+id);
   }
 
   @Get(':id')

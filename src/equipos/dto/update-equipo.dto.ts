@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateEquipoDto } from './create-equipo.dto';
-import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class UpdateEquipoDto extends PartialType(CreateEquipoDto) {
@@ -27,4 +27,8 @@ export class UpdateEquipoDto extends PartialType(CreateEquipoDto) {
     @IsNotEmpty({message:'Elija la Fecha de Fundación'})
     @Type(() => Date)
     fecha_fundacion?: Date;
+
+    @IsNotEmpty({message:'Campeonato es obligatorio'})
+    @IsNumber()
+    campeonato?: number;
 }

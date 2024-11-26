@@ -12,14 +12,14 @@ export class JugadoresController {
     return this.jugadoresService.create(createJugadoreDto);
   }
 
-  @Get()
-  findAll() {
-    return this.jugadoresService.findAll();
+  @Get('/bycampeonato/:id')
+  findAll(@Param('id') id: string)  {
+    return this.jugadoresService.findAll(+id);
   }
 
-  @Get('/count')
-  contarJugadores() {
-    return this.jugadoresService.contarJugadores();
+  @Get('/count/:id')
+  contarJugadores(@Param('id') id: string) {
+    return this.jugadoresService.contarJugadores(+id);
   }
 
   @Get(':id')

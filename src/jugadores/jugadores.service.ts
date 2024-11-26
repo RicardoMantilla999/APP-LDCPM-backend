@@ -18,38 +18,65 @@ export class JugadoresService {
   ) { }
 
   async create(createJugadoreDto: CreateJugadoreDto) {
-    const equipo = await this.equipoRepository.findOneBy({
-      id: createJugadoreDto.equipo,
+    const equipo = await this.equipoRepository.findOne({
+      where: { id: createJugadoreDto.equipo },
+      relations: ['campeonato'], // Incluimos la relación con campeonato
     });
+  
     if (!equipo) {
       throw new NotFoundException('Equipo no encontrado');
     }
-
-    const { cedula } = createJugadoreDto;
-
-    // Verificar si ya existe una categoría con el mismo nombre
-    const jugadorExistente = await this.jugadorRepository.findOne({
-      where: { cedula },
+  
+    const { cedula, dorsal } = createJugadoreDto;
+  
+    // Verificar si ya existe un jugador con la misma cédula en el mismo campeonato
+    const jugadorExistenteEnCampeonato = await this.jugadorRepository.findOne({
+      where: {
+        cedula,
+        equipo: {
+          campeonato: { id: equipo.campeonato.id },
+        },
+      },
+      relations: ['equipo', 'equipo.campeonato'],
     });
-
-    if (jugadorExistente) {
-      throw new BadRequestException('La cédula: ' + jugadorExistente.cedula + ' ya existe.');
+  
+    if (jugadorExistenteEnCampeonato) {
+      throw new BadRequestException(
+        `La cédula ${cedula} ya está registrada en el Campeonato: ${equipo.campeonato.nombre}, Equipo: ${equipo.nombre}`,
+      );
     }
-
-    // Crear y guardar la nueva categoría
-    const jugador = this.jugadorRepository.create({ ...createJugadoreDto, equipo });
-    //return await this.categoriaRepository.save(nuevaCategoria);
+  
+    // Verificar si el dorsal ya está en uso dentro del mismo equipo
+    const jugadorExistentePorDorsal = await this.jugadorRepository.findOne({
+      where: {
+        dorsal,
+        equipo: { id: equipo.id },
+      },
+    });
+  
+    if (jugadorExistentePorDorsal) {
+      throw new BadRequestException(
+        `El dorsal ${dorsal} ya está asignado en el equipo ${equipo.nombre}.`,
+      );
+    }
+  
+    // Crear y guardar el nuevo jugador
+    const jugador = this.jugadorRepository.create({
+      ...createJugadoreDto,
+      equipo,
+    });
+  
     return await this.jugadorRepository.save(jugador);
+  }
+  
+  
 
+  async findAll(id:number) {
+    return await this.jugadorRepository.find({where : {equipo: {campeonato: {id : id}}}});
   }
 
-
-  async findAll() {
-    return await this.jugadorRepository.find();
-  }
-
-  async contarJugadores() {
-    const count = await this.jugadorRepository.count();
+  async contarJugadores(campeonatoId: number) {
+    const count = await this.jugadorRepository.count({where:{ equipo: { campeonato: {id: campeonatoId}}}});
     return count;
   }
 
@@ -78,7 +105,7 @@ export class JugadoresService {
   }
 
   async remove(id: number) {
-    return await this.jugadorRepository.softDelete(id);
+    return await this.jugadorRepository.delete(id);
   }
 
   async filtrarJugadoresByEquipo(equipoId: number): Promise<Jugador[]> {

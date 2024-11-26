@@ -1,5 +1,5 @@
 import { Transform, Type } from "class-transformer";
-import { IsDate, IsNotEmpty, IsString } from "class-validator";
+import { IsDate, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateEquipoDto {
 
@@ -24,6 +24,10 @@ export class CreateEquipoDto {
     @IsDate()
     @Type(() => Date)
     fecha_fundacion: Date;
+
+    @IsNotEmpty({message:'Campeonato es obligatorio'})
+    @IsNumber()
+    campeonato: number;
 
 
 }

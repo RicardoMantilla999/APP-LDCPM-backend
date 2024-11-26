@@ -1,5 +1,5 @@
 import { Transform, Type } from "class-transformer";
-import { IsBoolean, IsDate, IsEmpty, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsDate, IsEmpty, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export class CreateDirigenteDto {
 
@@ -24,6 +24,9 @@ export class CreateDirigenteDto {
     @IsNotEmpty({ message: 'El teléfono es obligatorio' })
     telefono: string;
 
+    @IsNumber()
+    @IsNotEmpty({ message: 'El teléfono es obligatorio' })
+    campeonato: number;
     /**
     equispo: 
      */

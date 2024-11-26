@@ -17,9 +17,14 @@ export class CategoriasController {
     return this.categoriasService.findAll();
   }
 
-  @Get('/count')
-  contarCategorias(){
-    return this.categoriasService.contarCategorias();
+  @Get('/bycampeonato/:id')
+  findCategoriasByCampeonato(@Param('id') id: string) {
+    return this.categoriasService.findCategoriasByCampeonato(+id);
+  }
+
+  @Get('/count/:id')
+  contarCategorias(@Param('id') id: string){
+    return this.categoriasService.contarCategorias(+id);
   }
 
 
@@ -27,6 +32,7 @@ export class CategoriasController {
   findOne(@Param('id') id: string) {
     return this.categoriasService.findOne(+id);
   }
+  
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCategoriaDto: UpdateCategoriaDto) {

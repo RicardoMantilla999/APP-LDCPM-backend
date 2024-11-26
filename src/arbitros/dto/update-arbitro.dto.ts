@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateArbitroDto } from './create-arbitro.dto';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateArbitroDto extends PartialType(CreateArbitroDto) {
@@ -38,6 +38,10 @@ export class UpdateArbitroDto extends PartialType(CreateArbitroDto) {
     @Transform(({ value }) => value?.toUpperCase()) 
     direccion?: string;
 
+
+    @IsNumber()
+    @IsNotEmpty({message: 'Campeonato es obligatorio'})
+    campeonato: number;
     /**
     imagen: string;
 

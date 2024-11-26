@@ -11,6 +11,9 @@ import { ArbitrosModule } from './arbitros/arbitros.module';
 import { JugadoresModule } from './jugadores/jugadores.module';
 import { CampeonatosModule } from './campeonatos/campeonatos.module';
 import { FasesModule } from './fases/fases.module';
+import { GruposModule } from './grupos/grupos.module';
+import { PartidosModule } from './partidos/partidos.module';
+import { SorteosModule } from './sorteos/sorteos.module';
 
 @Module({
   imports: [
@@ -33,6 +36,9 @@ import { FasesModule } from './fases/fases.module';
     JugadoresModule,
     CampeonatosModule,
     FasesModule,
+    GruposModule,
+    PartidosModule,
+    SorteosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

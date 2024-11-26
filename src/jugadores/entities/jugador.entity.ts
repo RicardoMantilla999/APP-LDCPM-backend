@@ -1,5 +1,5 @@
 import { Equipo } from "src/equipos/entities/equipo.entity";
-import { Column, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Jugador {
@@ -30,9 +30,8 @@ export class Jugador {
     @Column()
     suspendido?: boolean = false;
 
-    @ManyToOne(()=> Equipo, (equipo) => equipo.nombre,{eager: true})
-    equipo: Equipo; 
 
-    @DeleteDateColumn()  // Asegúrate de tener esta columna
-    deletedAt: Date;
+    @ManyToOne(() => Equipo, (equipo) => equipo.jugador, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'equipo_id' })
+    equipo: Equipo;
 }

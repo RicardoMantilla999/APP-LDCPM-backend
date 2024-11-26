@@ -6,6 +6,7 @@ import { Equipo } from './entities/equipo.entity';
 import { Repository } from 'typeorm';
 import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Dirigente } from 'src/dirigentes/entities/dirigente.entity';
+import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 
 @Injectable()
 export class EquiposService {
@@ -18,7 +19,10 @@ export class EquiposService {
     private readonly categoriaRepository: Repository<Categoria>,
 
     @InjectRepository(Dirigente)
-    private readonly dirigenteRepository: Repository<Dirigente>
+    private readonly dirigenteRepository: Repository<Dirigente>,
+
+    @InjectRepository(Campeonato)
+    private readonly campeonatoRepository: Repository<Campeonato>
   ) { }
 
   async create(createEquipoDto: CreateEquipoDto) {
@@ -37,19 +41,27 @@ export class EquiposService {
     if (!dirigente) {
       throw new NotFoundException('Dirigente no encontrado');
     }
+    //Verificar campeonato
+    const campeonato = await this.campeonatoRepository.findOne({
+      where: { id: createEquipoDto.campeonato },
+    });
+    if (!campeonato) {
+      throw new NotFoundException('Camponato no encontrado');
+    }
 
     // Verificar si ya existe un equipo con el mismo nombre en la misma categoría
     const equipoExistente = await this.equipoRepository.findOne({
       where: {
         nombre: createEquipoDto.nombre,
         categoria: { id: createEquipoDto.categoria },
+        campeonato: { id: createEquipoDto.campeonato },
       },
-      relations: ['categoria'], // Para asegurarte de que las relaciones se resuelvan correctamente
+      relations: ['categoria', 'campeonato'], // Para asegurarte de que las relaciones se resuelvan correctamente
     });
 
     if (equipoExistente) {
       throw new BadRequestException(
-        "El equipo" +createEquipoDto.nombre +" ya existe en la categoría "+categoria.categoria+ "."
+        "El equipo" + createEquipoDto.nombre + " ya existe en la categoría " + categoria.categoria + "."
       );
     }
 
@@ -58,6 +70,7 @@ export class EquiposService {
       ...createEquipoDto,
       categoria,
       dirigente,
+      campeonato
     });
 
     return this.equipoRepository.save(equipo);
@@ -65,9 +78,9 @@ export class EquiposService {
 
 
 
-  async findAll() {
-    return await this.equipoRepository.find({
-      relations: ['categoria', 'dirigente'], // Relación con la categoría
+  async findAll(idCampeonato: number) {
+    return await this.equipoRepository.findBy({
+      campeonato: { id: idCampeonato }// Relación con la categoría
     });
   }
 
@@ -138,14 +151,25 @@ export class EquiposService {
   }
 
   async remove(id: number) {
-    return await this.equipoRepository.softDelete({ id });
+    return await this.equipoRepository.delete({ id });
   }
 
 
-  async contarEquipos() {
-    const count = await this.equipoRepository.count();
+  async contarEquipos(campeonatoId: number) {
+    const count = await this.equipoRepository.count({ where: { campeonato: { id: campeonatoId } } });
     return count;
   }
+
+  async contarEquiposByCategoria(categoriaId: number, campeonatoId: number) {
+    const count = await this.equipoRepository.count({
+      where: {
+        campeonato: { id: campeonatoId },
+        categoria: { id: categoriaId }
+      }
+    })
+    return count;
+  }
+
 
   async filtrarEquiposByCategoria(categoriaId: number): Promise<Equipo[]> {
     return this.equipoRepository.find({
@@ -153,6 +177,12 @@ export class EquiposService {
       relations: ['categoria'], // Incluye la relación con la categoría
     });
   }
-  
+
+  async getEquiposByCategoriaAndCampeonato(categoriaId: number, campeonatoId: number) {
+    return this.equipoRepository.find({
+      where: { categoria: { id: categoriaId }, campeonato: { id: campeonatoId } },
+      relations: ['categoria'], // Incluye la relación con la categoría
+    });
+  }
 
 }

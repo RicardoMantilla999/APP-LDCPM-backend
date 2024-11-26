@@ -31,6 +31,6 @@ export class CampeonatosService {
   }
 
   async remove(id: number) {
-    return await this.campeonatoRepository.softDelete(id);
+    return await this.campeonatoRepository.delete(id);
   }
 }

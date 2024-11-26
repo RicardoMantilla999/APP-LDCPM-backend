@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateCategoriaDto } from './create-categoria.dto';
-import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
@@ -16,5 +16,9 @@ export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
     @IsString()
     @IsNotEmpty({ message: 'La descripciónn es obligatoria' })
     descripcion?: string;
+
+    @IsNumber()
+    @IsNotEmpty({message: 'Campeonato obligatorio'})
+    campeonato: number;
 
 }

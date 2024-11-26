@@ -5,21 +5,21 @@ import { UpdateDirigenteDto } from './dto/update-dirigente.dto';
 
 @Controller('dirigentes')
 export class DirigentesController {
-  constructor(private readonly dirigentesService: DirigentesService) {}
+  constructor(private readonly dirigentesService: DirigentesService) { }
 
   @Post()
   create(@Body() createDirigenteDto: CreateDirigenteDto) {
     return this.dirigentesService.create(createDirigenteDto);
   }
 
-  @Get()
-  findAll() {
-    return this.dirigentesService.findAll();
+  @Get('/bycampeonato/:id')
+  findAll(@Param('id') id: string) {
+    return this.dirigentesService.findAll(+id);
   }
 
-  @Get('/count')
-  contarDirigentes(){
-    return this.dirigentesService.contarDirigentes();
+  @Get('/count/:id')
+  contarDirigentes(@Param('id') id: string) {
+    return this.dirigentesService.contarDirigentes(+id);
   }
 
   @Get(':id')

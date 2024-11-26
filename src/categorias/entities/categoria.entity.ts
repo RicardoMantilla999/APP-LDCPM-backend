@@ -1,4 +1,6 @@
-import { Column, DeleteDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Campeonato } from "src/campeonatos/entities/campeonato.entity";
+import { Sorteo } from "src/sorteos/entities/sorteo.entity";
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Categoria {
@@ -12,8 +14,11 @@ export class Categoria {
     @Column()
     descripcion: string;
 
-    @DeleteDateColumn() 
-    deletedAt: Date;
+    @ManyToOne(() => Campeonato, (campeonato) => campeonato.categorias, { eager: true ,onDelete: 'CASCADE' })
+    campeonato: Campeonato;
+
+    @OneToMany(() => Sorteo, (sorteo) => sorteo.categoria, { cascade: true })
+    sorteo: Sorteo[];
 
 }
 

@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateDirigenteDto } from './create-dirigente.dto';
-import { IsBoolean, IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class UpdateDirigenteDto extends PartialType(CreateDirigenteDto) {
@@ -25,9 +25,12 @@ export class UpdateDirigenteDto extends PartialType(CreateDirigenteDto) {
     @IsString()
     @IsNotEmpty({ message: 'Teléfono no puede ser vacío' })
     telefono?: string;
-    /**
-    equispo: 
-     */
+
+
+    @IsNumber()
+    @IsNotEmpty({ message: 'El teléfono es obligatorio' })
+    campeonato?; number;
+  
     @IsString()
     @IsNotEmpty({ message: 'Lugar de nacimiento no puede ser vacío' })
     @Transform(({ value }) => value?.toUpperCase()) 

@@ -12,19 +12,29 @@ export class EquiposController {
     return this.equiposService.create(createEquipoDto);
   }
 
-  @Get()
-  findAll() {
-    return this.equiposService.findAll();
+  @Get('/bycampeonato/:id')
+  findAll(@Param('id') id: string) {
+    return this.equiposService.findAll(+id);
   }
 
   @Get('/bycategoria/:id')
   filtrarEquiposByCategoria(@Param('id') id: string) {
     return this.equiposService.filtrarEquiposByCategoria(+id);
   }
+  @Get('/bycategoria/:categoriaId/bycampeonato/:campeonatoId')
+  getEquiposByCategoriaAndCampeonato(@Param('categoriaId') categoriaId: string,@Param('campeonatoId') campeonatoId: string) {
+    return this.equiposService.getEquiposByCategoriaAndCampeonato(+categoriaId,+campeonatoId);
+  }
 
-  @Get('/count')
-  contarEquipos(){
-    return this.equiposService.contarEquipos();
+
+  @Get('/count/:id')
+  contarEquipos(@Param('id') id: string){
+    return this.equiposService.contarEquipos(+id);
+  }
+
+  @Get('/count/:categoriaid/:campeonatoid')
+  contarEquiposByCategoria(@Param('categoriaid') idcat: string,@Param('campeonatoid') idcam: string){
+    return this.equiposService.contarEquiposByCategoria(+idcat,+idcam);
   }
 
 

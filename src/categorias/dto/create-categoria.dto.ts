@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 
 export class CreateCategoriaDto {
 
@@ -12,5 +12,9 @@ export class CreateCategoriaDto {
     @IsString()
     @IsNotEmpty({ message: 'La descripción es obligatoria' })
     descripcion: string;
+
+    @IsNumber()
+    @IsNotEmpty({message: 'Campeonato obligatorio'})
+    campeonato: number;
 
 }

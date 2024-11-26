@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDirigenteDto } from './dto/create-dirigente.dto';
 import { UpdateDirigenteDto } from './dto/update-dirigente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Dirigente } from './entities/dirigente.entity';
 import { Repository } from 'typeorm';
+import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 
 @Injectable()
 export class DirigentesService {
@@ -11,11 +12,20 @@ export class DirigentesService {
   constructor(
     @InjectRepository(Dirigente)
     private readonly dirigenteRepository: Repository<Dirigente>,
+    @InjectRepository(Campeonato)
+    private readonly campeonatoRepository: Repository<Campeonato>
 
   ) { }
 
   async create(createDirigenteDto: CreateDirigenteDto) {
     const { cedula } = createDirigenteDto;
+
+    const campeonato = await this.campeonatoRepository.findOne({
+      where: { id: createDirigenteDto.campeonato }
+    })
+    if (!campeonato) {
+      throw new NotFoundException('campeonato no encontrado')
+    }
 
     // Verificar si ya existe una categoría con el mismo nombre
     const dirigenteExistente = await this.dirigenteRepository.findOne({
@@ -27,18 +37,18 @@ export class DirigentesService {
     }
 
     // Crear y guardar la nueva categoría
-    const nuevoDirigente = this.dirigenteRepository.create(createDirigenteDto);
+    const nuevoDirigente = this.dirigenteRepository.create({ ...createDirigenteDto, campeonato });
     //return await this.categoriaRepository.save(nuevaCategoria);
     return await this.dirigenteRepository.save(nuevoDirigente);
 
   }
 
-  async findAll() {
-    return await this.dirigenteRepository.find();
+  async findAll(id: number) {
+    return await this.dirigenteRepository.find({ where: { campeonato: { id: id } } });
   }
 
-  async contarDirigentes() {
-    const count = await this.dirigenteRepository.count();
+  async contarDirigentes(campeonatoId: number) {
+    const count = await this.dirigenteRepository.count({ where: { campeonato: { id: campeonatoId } } });
     return count;
   }
 
@@ -51,6 +61,6 @@ export class DirigentesService {
   }
 
   async remove(id: number) {
-    return await this.dirigenteRepository.softDelete({ id });
+    return await this.dirigenteRepository.delete({ id });
   }
 }
