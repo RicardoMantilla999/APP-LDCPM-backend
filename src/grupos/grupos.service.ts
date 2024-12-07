@@ -25,8 +25,7 @@ export class GruposService {
       throw new NotFoundException('Fase no encontrada');
     }
     const grupo = this.grupoRepository.create({
-      ...createGrupoDto,
-      fase, // Asignar la entidad completa de fase
+      ...createGrupoDto// Asignar la entidad completa de fase
     });
     return await this.grupoRepository.save(grupo);
   }
@@ -57,8 +56,6 @@ export class GruposService {
 
     // Asignar los valores del DTO al grupo
     Object.assign(grupo, updateGrupoDto);
-    grupo.fase = fase; // Asegurarte de asignar la relación correctamente
-
     // Guardar el grupo actualizado
     return await this.grupoRepository.save(grupo);
   }

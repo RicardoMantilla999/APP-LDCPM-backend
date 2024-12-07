@@ -1,5 +1,6 @@
 import { Equipo } from "src/equipos/entities/equipo.entity";
-import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Gole } from "src/goles/entities/gole.entity";
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Jugador {
@@ -34,4 +35,7 @@ export class Jugador {
     @ManyToOne(() => Equipo, (equipo) => equipo.jugador, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'equipo_id' })
     equipo: Equipo;
+
+    @OneToMany(() => Gole, (gol) => gol.goles, { cascade: true })
+    goles: Gole[];
 }

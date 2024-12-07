@@ -1,6 +1,8 @@
 import { Campeonato } from "src/campeonatos/entities/campeonato.entity";
-import { Sorteo } from "src/sorteos/entities/sorteo.entity";
-import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Fase } from "src/fases/entities/fase.entity";
+import { Gole } from "src/goles/entities/gole.entity";
+import { Partido } from "src/partidos/entities/partido.entity";
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Categoria {
@@ -14,11 +16,20 @@ export class Categoria {
     @Column()
     descripcion: string;
 
+    @ManyToOne(() => Fase, (fase) => fase.categorias, { eager: true, nullable: true })
+    @JoinColumn({ name: 'fase_actual_id' })
+    fase_actual: Fase;
+    
+
     @ManyToOne(() => Campeonato, (campeonato) => campeonato.categorias, { eager: true ,onDelete: 'CASCADE' })
     campeonato: Campeonato;
 
-    @OneToMany(() => Sorteo, (sorteo) => sorteo.categoria, { cascade: true })
-    sorteo: Sorteo[];
+
+    @OneToMany(() => Partido, (partido) => partido.categoria, { cascade: true })
+    partido: Partido[];
+
+    @OneToMany(() => Gole, (gol) => gol.goles, { cascade: true })
+    goles: Gole[];
 
 }
 

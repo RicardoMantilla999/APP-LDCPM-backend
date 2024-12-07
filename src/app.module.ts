@@ -13,7 +13,7 @@ import { CampeonatosModule } from './campeonatos/campeonatos.module';
 import { FasesModule } from './fases/fases.module';
 import { GruposModule } from './grupos/grupos.module';
 import { PartidosModule } from './partidos/partidos.module';
-import { SorteosModule } from './sorteos/sorteos.module';
+import { GolesModule } from './goles/goles.module';
 
 @Module({
   imports: [
@@ -38,7 +38,7 @@ import { SorteosModule } from './sorteos/sorteos.module';
     FasesModule,
     GruposModule,
     PartidosModule,
-    SorteosModule,
+    GolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

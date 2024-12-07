@@ -31,4 +31,8 @@ export class UpdateEquipoDto extends PartialType(CreateEquipoDto) {
     @IsNotEmpty({message:'Campeonato es obligatorio'})
     @IsNumber()
     campeonato?: number;
+
+    @IsOptional()
+    @IsNumber()
+    nro_sorteo: number;
 }

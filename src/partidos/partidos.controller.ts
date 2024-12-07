@@ -1,20 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { PartidosService } from './partidos.service';
 import { CreatePartidoDto } from './dto/create-partido.dto';
 import { UpdatePartidoDto } from './dto/update-partido.dto';
 
 @Controller('partidos')
 export class PartidosController {
-  constructor(private readonly partidosService: PartidosService) {}
+  constructor(private readonly partidosService: PartidosService) { }
+
+
+
+
 
   @Post()
   create(@Body() createPartidoDto: CreatePartidoDto) {
     return this.partidosService.create(createPartidoDto);
   }
 
-  @Get()
-  findAll() {
-    return this.partidosService.findAll();
+  @Get('fase:fase/categoria:cat/fecha:fecha')
+  findAll(@Param('fase') fase: number, @Param('cat') cat: number, @Param('fecha') fecha: number) {
+    return this.partidosService.findAll(fase, cat, fecha);
   }
 
   @Get(':id')
@@ -31,4 +35,10 @@ export class PartidosController {
   remove(@Param('id') id: string) {
     return this.partidosService.remove(+id);
   }
+
+  @Get('fechas/:categoriaId')
+  async obtenerFechas(@Param('categoriaId') categoriaId: number){
+    return this.partidosService.obtenerFechas(categoriaId);
+  }
+
 }

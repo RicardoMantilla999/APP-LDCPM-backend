@@ -1,5 +1,5 @@
 import { Transform, Type } from "class-transformer";
-import { IsDate, IsNotEmpty, IsString } from "class-validator";
+import { IsDate, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateCampeonatoDto {
 
@@ -9,10 +9,6 @@ export class CreateCampeonatoDto {
     @Transform(({ value }) => value?.toUpperCase()) 
     nombre: string;
 
-    @IsString()
-    @IsNotEmpty({message: 'El formato es obligatorio'})
-    @Transform(({ value }) => value?.toUpperCase()) 
-    formato: string;
 
     @IsNotEmpty({message: 'La Fecha es obligatorio'})
     @Type(() => Date)
@@ -22,5 +18,7 @@ export class CreateCampeonatoDto {
     @Type(() => Date)
     fecha_fin: Date;
 
+
+    
 
 }

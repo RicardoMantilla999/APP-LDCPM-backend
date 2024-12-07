@@ -18,6 +18,10 @@ export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
     descripcion?: string;
 
     @IsNumber()
+    @IsOptional()
+    fase_actual?: number;
+    
+    @IsNumber()
     @IsNotEmpty({message: 'Campeonato obligatorio'})
     campeonato: number;
 

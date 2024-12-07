@@ -19,11 +19,15 @@ export class CreatePartidoDto {
     @IsOptional()
     goles_2?: number;
   
-    @IsOptional()
-    grupo?: number;
-  
     @IsNotEmpty({message:'Fase es Oblligatorio'})
     fase: number;
+
+    @IsNotEmpty({message: 'Categoria es obligatorio'})
+    categoria: number;
+
+    @IsNotEmpty({message: 'Nro de Fecha obligatorio'})
+    @IsNumber()
+    nro_fecha: number;
   
     @IsOptional()
     @Type(() => Date)
@@ -35,7 +39,7 @@ export class CreatePartidoDto {
   
     @IsOptional() //Opciones: programado, postergado, cancelado, jugado.
     @IsBoolean()
-    culminado?: boolean= true;
+    culminado?: boolean= false;
 
 
 }

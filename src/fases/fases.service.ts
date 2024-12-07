@@ -18,26 +18,14 @@ export class FasesService {
 
 
   async create(createFaseDto: CreateFaseDto) {
-    console.log('DTO recibido:', createFaseDto);
-
-    const campeonato = await this.campeonatoRepository.findOne({ where: { id: createFaseDto.campeonato } });
-    console.log('Campeonato encontrado:', campeonato);
-
-    if (!campeonato) {
-        console.error('Campeonato no encontrado');
-        throw new NotFoundException('Campeonato no encontrado');
-    }
 
     // Asignar manualmente las propiedades necesarias
     const nuevaFase = this.faseRepository.create({
         nombre: createFaseDto.nombre,
         orden: createFaseDto.orden,
-        campeonato: campeonato,
     });
-    console.log('Fase creada:', nuevaFase);
 
     const resultado = await this.faseRepository.save(nuevaFase);
-    console.log('Resultado guardado:', resultado);
 
     return resultado;
 }
@@ -45,7 +33,7 @@ export class FasesService {
 
 
    async findAll() {
-    return await this.faseRepository.find();
+    return await this.faseRepository.find({order: {orden: 'ASC'}});
   }
 
   async findOne(id: number) {
@@ -62,18 +50,7 @@ export class FasesService {
       throw new NotFoundException('Fase no encontrada');
     }
   
-    // Verificar y actualizar el campeonato si está presente en el DTO
-    if (updateFaseDto.campeonato) {
-      const campeonato = await this.campeonatoRepository.findOne({
-        where: { id: updateFaseDto.campeonato },
-      });
-  
-      if (!campeonato) {
-        throw new NotFoundException('Campeonato no encontrado');
-      }
-  
-      fase.campeonato = campeonato;
-    }
+
   
     // Actualizar otras propiedades
     Object.assign(fase, updateFaseDto);

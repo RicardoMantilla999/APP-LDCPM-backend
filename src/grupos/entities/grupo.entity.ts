@@ -11,12 +11,6 @@ export class Grupo {
     @Column()
     nombre: string;
 
-    @ManyToOne(()=> Fase, (fase) => fase.grupo,{eager:true, onDelete:'CASCADE'})
-    @JoinColumn({ name: 'fase_id' })
-    fase: Fase;
-
-    @OneToMany(() => Partido, (partido) => partido.grupo, { cascade: true })
-    partido: Partido[];
-
+  
  
 }

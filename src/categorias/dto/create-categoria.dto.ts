@@ -14,6 +14,9 @@ export class CreateCategoriaDto {
     descripcion: string;
 
     @IsNumber()
+    fase_actual: number = 10;
+
+    @IsNumber()
     @IsNotEmpty({message: 'Campeonato obligatorio'})
     campeonato: number;
 

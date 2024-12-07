@@ -3,7 +3,8 @@ import { Categoria } from "src/categorias/entities/categoria.entity";
 import { Dirigente } from "src/dirigentes/entities/dirigente.entity";
 import { Equipo } from "src/equipos/entities/equipo.entity";
 import { Fase } from "src/fases/entities/fase.entity";
-import { Column, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Gole } from "src/goles/entities/gole.entity";
+import { Column, DeleteDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Campeonato {
@@ -14,17 +15,11 @@ export class Campeonato {
     @Column()
     nombre: string;
 
-    @Column()
-    formato: string;
-
     @Column({ type: 'date', nullable: true })
     fecha_inicio: Date;
 
     @Column({ type: 'date', nullable: true })
     fecha_fin: Date;
-
-    @OneToMany(() => Fase, (fase) => fase.campeonato, { cascade: true })
-    fases: Fase[];
 
     @OneToMany(() => Categoria, (categoria) => categoria.campeonato, { cascade: true })
     categorias: Categoria[];
@@ -37,4 +32,7 @@ export class Campeonato {
 
     @OneToMany(() => Arbitro, (arbitro) => arbitro.campeonato, { cascade: true })
     arbitros: Arbitro[];
+
+    @OneToMany(() => Gole, (gol) => gol.goles, { cascade: true })
+    goles: Gole[];
 }

@@ -5,7 +5,7 @@ import { UpdateCategoriaDto } from './dto/update-categoria.dto';
 
 @Controller('categorias')
 export class CategoriasController {
-  constructor(private readonly categoriasService: CategoriasService) {}
+  constructor(private readonly categoriasService: CategoriasService) { }
 
   @Post()
   create(@Body() createCategoriaDto: CreateCategoriaDto) {
@@ -23,7 +23,7 @@ export class CategoriasController {
   }
 
   @Get('/count/:id')
-  contarCategorias(@Param('id') id: string){
+  contarCategorias(@Param('id') id: string) {
     return this.categoriasService.contarCategorias(+id);
   }
 
@@ -32,7 +32,7 @@ export class CategoriasController {
   findOne(@Param('id') id: string) {
     return this.categoriasService.findOne(+id);
   }
-  
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCategoriaDto: UpdateCategoriaDto) {
@@ -43,4 +43,11 @@ export class CategoriasController {
   remove(@Param('id') id: string) {
     return this.categoriasService.remove(+id);
   }
+
+
+  @Get(':categoriaId/fase-actual')
+  async obtenerFaseActual(@Param('categoriaId') categoriaId: number) {
+    return await this.categoriasService.obtenerFaseActual(categoriaId);
+  }
+
 }

@@ -170,6 +170,15 @@ export class EquiposService {
     return count;
   }
 
+  async actualizarNroSorteo(equipos: { id: number; nro_sorteo: number }[]) {
+    const actualizaciones = equipos.map(async (equipo) => {
+      await this.equipoRepository.update(equipo.id, { nro_sorteo: equipo.nro_sorteo });
+    });
+
+    await Promise.all(actualizaciones);
+    return { message: 'Números de sorteo actualizados correctamente.' };
+  }
+
 
   async filtrarEquiposByCategoria(categoriaId: number): Promise<Equipo[]> {
     return this.equipoRepository.find({

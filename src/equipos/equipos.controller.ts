@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
 import { EquiposService } from './equipos.service';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
 
 @Controller('equipos')
 export class EquiposController {
-  constructor(private readonly equiposService: EquiposService) {}
+  constructor(private readonly equiposService: EquiposService) { }
 
   @Post()
   create(@Body() createEquipoDto: CreateEquipoDto) {
@@ -22,19 +22,27 @@ export class EquiposController {
     return this.equiposService.filtrarEquiposByCategoria(+id);
   }
   @Get('/bycategoria/:categoriaId/bycampeonato/:campeonatoId')
-  getEquiposByCategoriaAndCampeonato(@Param('categoriaId') categoriaId: string,@Param('campeonatoId') campeonatoId: string) {
-    return this.equiposService.getEquiposByCategoriaAndCampeonato(+categoriaId,+campeonatoId);
+  getEquiposByCategoriaAndCampeonato(@Param('categoriaId') categoriaId: string, @Param('campeonatoId') campeonatoId: string) {
+    return this.equiposService.getEquiposByCategoriaAndCampeonato(+categoriaId, +campeonatoId);
+  }
+
+  @Patch('/actualizar-nro-sorteo')
+  async actualizarNroSorteo(
+    @Body() equipos: { id: number; nro_sorteo: number }[],
+  ): Promise<any> {
+    return await this.equiposService.actualizarNroSorteo(equipos);
   }
 
 
+
   @Get('/count/:id')
-  contarEquipos(@Param('id') id: string){
+  contarEquipos(@Param('id') id: string) {
     return this.equiposService.contarEquipos(+id);
   }
 
   @Get('/count/:categoriaid/:campeonatoid')
-  contarEquiposByCategoria(@Param('categoriaid') idcat: string,@Param('campeonatoid') idcam: string){
-    return this.equiposService.contarEquiposByCategoria(+idcat,+idcam);
+  contarEquiposByCategoria(@Param('categoriaid') idcat: string, @Param('campeonatoid') idcam: string) {
+    return this.equiposService.contarEquiposByCategoria(+idcat, +idcam);
   }
 
 

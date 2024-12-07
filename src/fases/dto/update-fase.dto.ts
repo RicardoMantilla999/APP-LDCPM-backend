@@ -16,9 +16,4 @@ export class UpdateFaseDto extends PartialType(CreateFaseDto) {
     orden?: number;
 
 
-    @IsNotEmpty({ message: 'Campeonato es obligatorio' })
-    campeonato?: number;
-    
-
-
 }

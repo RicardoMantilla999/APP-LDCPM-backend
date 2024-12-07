@@ -9,9 +9,10 @@ import { CategoriasService } from 'src/categorias/categorias.service';
 import { DirigentesService } from 'src/dirigentes/dirigentes.service';
 import { Dirigente } from 'src/dirigentes/entities/dirigente.entity';
 import { Categoria } from 'src/categorias/entities/categoria.entity';
+import { Partido } from 'src/partidos/entities/partido.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria]), CategoriasModule, DirigentesModule],
+  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Partido]), CategoriasModule, DirigentesModule],
   controllers: [EquiposController],
   providers: [EquiposService, CategoriasService, DirigentesService],
 })

@@ -13,10 +13,4 @@ export class CreateFaseDto {
     orden: number;
 
 
-    @IsNotEmpty({ message: 'Campeonato es obligatorio' })
-    @IsNumber()
-    campeonato: number;
-
-
-
 }
