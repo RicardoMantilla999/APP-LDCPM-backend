@@ -10,10 +10,12 @@ import { DirigentesService } from 'src/dirigentes/dirigentes.service';
 import { Dirigente } from 'src/dirigentes/entities/dirigente.entity';
 import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Partido } from 'src/partidos/entities/partido.entity';
+import { Posicione } from 'src/posiciones/entities/posicione.entity';
+import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Partido]), CategoriasModule, DirigentesModule],
+  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Campeonato, Posicione])],
   controllers: [EquiposController],
-  providers: [EquiposService, CategoriasService, DirigentesService],
+  providers: [EquiposService],
 })
 export class EquiposModule {}

@@ -5,7 +5,7 @@ import { UpdateGoleDto } from './dto/update-gole.dto';
 
 @Controller('goles')
 export class GolesController {
-  constructor(private readonly golesService: GolesService) {}
+  constructor(private readonly golesService: GolesService) { }
 
   @Post()
   create(@Body() createGoleDto: CreateGoleDto) {
@@ -31,4 +31,12 @@ export class GolesController {
   remove(@Param('id') id: string) {
     return this.golesService.remove(+id);
   }
+
+  @Post('guardar')
+async guardarGoles(@Body() datos: { jugadorId: number; goles: number; partidoId: number; equipoId: number }) {
+  return this.golesService.guardarGoles(datos.jugadorId, datos.goles, datos.partidoId, datos.equipoId);
+}
+
+
+
 }

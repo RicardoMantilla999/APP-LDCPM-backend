@@ -159,6 +159,21 @@ export class CampeonatosService {
   }
 
 
+  async actualizarCampeonato(id: number, updateCampeonatoDto: UpdateCampeonatoDto): Promise<Campeonato> {
+    // Buscar el campeonato por ID
+    const campeonato = await this.campeonatoRepository.findOne({ where: { id } });
+
+    if (!campeonato) {
+      throw new NotFoundException(`El campeonato con ID ${id} no fue encontrado`);
+    }
+
+    // Actualizar el campeonato con los valores proporcionados en el DTO
+    Object.assign(campeonato, updateCampeonatoDto);
+
+    // Guardar los cambios en la base de datos
+    return this.campeonatoRepository.save(campeonato);
+  }
+
 }
 
 

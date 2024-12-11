@@ -3,10 +3,11 @@ import { CampeonatosService } from './campeonatos.service';
 import { CreateCampeonatoDto } from './dto/create-campeonato.dto';
 import { UpdateCampeonatoDto } from './dto/update-campeonato.dto';
 import { Partido } from 'src/partidos/entities/partido.entity';
+import { Campeonato } from './entities/campeonato.entity';
 
 @Controller('campeonatos')
 export class CampeonatosController {
-  constructor(private readonly campeonatosService: CampeonatosService) { }
+  constructor(private readonly campeonatosService: CampeonatosService, private readonly campeonatoService: CampeonatosService) { }
 
   @Post()
   create(@Body() createCampeonatoDto: CreateCampeonatoDto) {
@@ -41,4 +42,13 @@ export class CampeonatosController {
   remove(@Param('id') id: string) {
     return this.campeonatosService.remove(+id);
   }
+
+  @Patch('actualizar/:id')
+  async actualizarCampeonato(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCampeonatoDto: UpdateCampeonatoDto,
+  ): Promise<Campeonato> {
+    return this.campeonatoService.actualizarCampeonato(id, updateCampeonatoDto);
+  }
+
 }

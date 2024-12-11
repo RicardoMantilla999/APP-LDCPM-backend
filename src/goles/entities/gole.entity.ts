@@ -9,40 +9,26 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "t
 @Entity()
 export class Gole {
 
-    @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   goles: number; // Cantidad de goles en ese registro
 
   // Relación con el Jugador
-  @ManyToOne(() => Jugador, jugador => jugador.goles,{ eager: true ,onDelete: 'CASCADE' })
+  @ManyToOne(() => Jugador, jugador => jugador.goles, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'jugadorId' })
   jugador: Jugador;
 
   // Relación con el Partido
-  @ManyToOne(() => Partido, partido => partido.goles,{ eager: true ,onDelete: 'CASCADE' })
+  @ManyToOne(() => Partido, partido => partido.goles, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'partidoId' })
   partido: Partido;
 
   // Relación con el Equipo
-  @ManyToOne(() => Equipo, equipo => equipo.goles,{ eager: true ,onDelete: 'CASCADE' })
+  @ManyToOne(() => Equipo, equipo => equipo.goles, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'equipoId' })
   equipo: Equipo;
 
-  // Relación con la Fase
-  @ManyToOne(() => Fase, fase => fase.goles,{ eager: true ,onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'faseId' })
-  fase: Fase;
-
-  // Relación con el Campeonato
-  @ManyToOne(() => Campeonato, campeonato => campeonato.goles,{ eager: true ,onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'campeonatoId' })
-  campeonato: Campeonato;
-
-  // Relación con la Categoria
-  @ManyToOne(() => Categoria, categoria => categoria.goles,{ eager: true ,onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'categoriaId' })
-  categoria: Categoria;
 
 }

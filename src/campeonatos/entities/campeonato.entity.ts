@@ -21,6 +21,7 @@ export class Campeonato {
     @Column({ type: 'date', nullable: true })
     fecha_fin: Date;
 
+ 
     @OneToMany(() => Categoria, (categoria) => categoria.campeonato, { cascade: true })
     categorias: Categoria[];
 

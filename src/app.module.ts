@@ -14,6 +14,8 @@ import { FasesModule } from './fases/fases.module';
 import { GruposModule } from './grupos/grupos.module';
 import { PartidosModule } from './partidos/partidos.module';
 import { GolesModule } from './goles/goles.module';
+import { TarjetasModule } from './tarjetas/tarjetas.module';
+import { PosicionesModule } from './posiciones/posiciones.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { GolesModule } from './goles/goles.module';
     GruposModule,
     PartidosModule,
     GolesModule,
+    TarjetasModule,
+    PosicionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
