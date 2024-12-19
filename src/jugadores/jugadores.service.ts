@@ -6,6 +6,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Equipo } from 'src/equipos/entities/equipo.entity';
 import e from 'express';
+import { createFolderStructure, generateFileName } from './helpers/file.helper';
+import * as path from 'path';
+import * as fs from 'fs';
+import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
+
 
 @Injectable()
 export class JugadoresService {
@@ -17,66 +22,79 @@ export class JugadoresService {
     private readonly equipoRepository: Repository<Equipo>,
   ) { }
 
-  async create(createJugadoreDto: CreateJugadoreDto) {
-    const equipo = await this.equipoRepository.findOne({
-      where: { id: createJugadoreDto.equipo },
-      relations: ['campeonato'], // Incluimos la relación con campeonato
-    });
   
-    if (!equipo) {
-      throw new NotFoundException('Equipo no encontrado');
+  async create(createJugadorDto: CreateJugadoreDto, file?: Express.Multer.File): Promise<Jugador> {
+    const { equipo, dorsal, apellidos, ...rest } = createJugadorDto;
+    const mediaBasePath = path.resolve(__dirname, '..', '..', 'media'); // Ruta absoluta a la carpeta "media"
+  
+    // Conversión a números
+    const equipoId = Number(equipo);
+    const dorsalNumber = Number(dorsal);
+  
+    if (isNaN(equipoId) || isNaN(dorsalNumber)) {
+      throw new Error('El equipo o el dorsal no son valores numéricos válidos.');
     }
   
-    const { cedula, dorsal } = createJugadoreDto;
-  
-    // Verificar si ya existe un jugador con la misma cédula en el mismo campeonato
-    const jugadorExistenteEnCampeonato = await this.jugadorRepository.findOne({
-      where: {
-        cedula,
-        equipo: {
-          campeonato: { id: equipo.campeonato.id },
-        },
-      },
-      relations: ['equipo', 'equipo.campeonato'],
+    // Consulta del equipo y sus relaciones (campeonato y categoría)
+    const equipoData = await this.equipoRepository.findOne({
+      where: { id: equipoId },
+      relations: ['categoria', 'categoria.campeonato'],
     });
   
-    if (jugadorExistenteEnCampeonato) {
-      throw new BadRequestException(
-        `La cédula ${cedula} ya está registrada en el Campeonato: ${equipo.campeonato.nombre}, Equipo: ${equipo.nombre}`,
-      );
+    if (!equipoData) {
+      throw new Error(`No se encontró el equipo con ID ${equipoId}`);
     }
   
-    // Verificar si el dorsal ya está en uso dentro del mismo equipo
-    const jugadorExistentePorDorsal = await this.jugadorRepository.findOne({
-      where: {
-        dorsal,
-        equipo: { id: equipo.id },
-      },
-    });
+    const campeonatoId = equipoData.categoria?.campeonato?.id;
+    const categoriaId = equipoData.categoria?.id;
+    const nombreEquipo = equipoData.nombre;
   
-    if (jugadorExistentePorDorsal) {
-      throw new BadRequestException(
-        `El dorsal ${dorsal} ya está asignado en el equipo ${equipo.nombre}.`,
-      );
+    if (!campeonatoId || !categoriaId || !nombreEquipo) {
+      throw new Error('Faltan datos para crear la estructura de carpetas (campeonato, categoría o equipo).');
     }
   
-    // Crear y guardar el nuevo jugador
+    // Creación de la ruta de la foto
+    let fotoPath: string | undefined = undefined;
+    if (file) {
+      const folderPath = createFolderStructure(campeonatoId, categoriaId, nombreEquipo);
+  
+      if (!folderPath) {
+        throw new Error('No se pudo crear la estructura de carpetas.');
+      }
+  
+      const fileName = generateFileName(dorsalNumber, apellidos);
+      if (!fileName) {
+        throw new Error('No se pudo generar el nombre del archivo.');
+      }
+  
+      const absoluteFotoPath = path.join(folderPath, fileName);
+      fs.writeFileSync(absoluteFotoPath, file.buffer);
+  
+      // Generar la ruta relativa solo desde "media"
+      fotoPath = path.relative(mediaBasePath, absoluteFotoPath).replace(/\\/g, '/'); // Asegura el formato UNIX
+    }
+  
+    // Creación del jugador
     const jugador = this.jugadorRepository.create({
-      ...createJugadoreDto,
-      equipo,
+      ...rest,
+      dorsal: dorsalNumber,
+      apellidos,
+      equipo: { id: equipoId },
+      foto: fotoPath, // Guarda la ruta relativa desde "media"
     });
   
-    return await this.jugadorRepository.save(jugador);
+    return this.jugadorRepository.save(jugador);
   }
   
-  
 
-  async findAll(id:number) {
-    return await this.jugadorRepository.find({where : {equipo: {campeonato: {id : id}}}});
+
+
+  async findAll(id: number) {
+    return await this.jugadorRepository.find({ where: { equipo: { campeonato: { id: id } } } });
   }
 
   async contarJugadores(campeonatoId: number) {
-    const count = await this.jugadorRepository.count({where:{ equipo: { campeonato: {id: campeonatoId}}}});
+    const count = await this.jugadorRepository.count({ where: { equipo: { campeonato: { id: campeonatoId } } } });
     return count;
   }
 
@@ -114,5 +132,28 @@ export class JugadoresService {
       relations: ['equipo'], // Incluye la relación con el equipo
     });
   }
+
+  async getDynamicPath(equipoId: number): Promise<string> {
+    const equipo = await this.equipoRepository.findOne({
+      where: { id: equipoId },
+      relations: ['campeonato', 'categoria'],
+    });
+
+    if (!equipo) {
+      throw new NotFoundException('Equipo no encontrado');
+    }
+
+    const campeonatoID = equipo.campeonato.id;
+    const categoriaID = equipo.categoria.id;
+    const equipoNombre = equipo.nombre.replace(/\s+/g, '-');
+
+    // Ruta dinámica
+    return `./media/${campeonatoID}/${categoriaID}/${equipoNombre}/jugadores`;
+  }
+
+
+
+
+
 
 }

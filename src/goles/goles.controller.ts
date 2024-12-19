@@ -22,6 +22,11 @@ export class GolesController {
     return this.golesService.findOne(+id);
   }
 
+  @Get('goleadores/:id/:cantidad')
+  findGoleadores(@Param('id') id: string, @Param('cantidad') cantidad: string) {
+    return this.golesService.getGoleadoresByCategoria(+id, +cantidad);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateGoleDto: UpdateGoleDto) {
     return this.golesService.update(+id, updateGoleDto);
@@ -33,9 +38,11 @@ export class GolesController {
   }
 
   @Post('guardar')
-async guardarGoles(@Body() datos: { jugadorId: number; goles: number; partidoId: number; equipoId: number }) {
-  return this.golesService.guardarGoles(datos.jugadorId, datos.goles, datos.partidoId, datos.equipoId);
-}
+  async guardarGoles(@Body() datos: { jugadorId: number; goles: number; partidoId: number; equipoId: number }) {
+    return this.golesService.guardarGoles(datos.jugadorId, datos.goles, datos.partidoId, datos.equipoId);
+  }
+
+
 
 
 

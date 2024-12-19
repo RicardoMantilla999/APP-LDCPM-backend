@@ -8,6 +8,7 @@ import { Partido } from 'src/partidos/entities/partido.entity';
 import { Equipo } from 'src/equipos/entities/equipo.entity';
 import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Fase } from 'src/fases/entities/fase.entity';
+import { Posicione } from 'src/posiciones/entities/posicione.entity';
 
 @Injectable()
 export class CampeonatosService {
@@ -22,7 +23,9 @@ export class CampeonatosService {
     @InjectRepository(Fase)
     private readonly faseRepository: Repository<Fase>,
     @InjectRepository(Categoria)
-    private readonly categoriaRepository: Repository<Categoria>
+    private readonly categoriaRepository: Repository<Categoria>,
+    @InjectRepository(Posicione)
+    private readonly posicionRepository: Repository<Posicione>
 
   ) { }
 
@@ -77,7 +80,7 @@ export class CampeonatosService {
 
   async generarCalendario(campeonatoId: number, categoriaId: number): Promise<Partido[]> {
     try {
-      // Verifica si la categoría existe y obtiene la fase actual de la categoría
+      // Verifica la categoría y obtiene la fase actual
       const categoria = await this.categoriaRepository.findOne({
         where: { id: categoriaId, campeonato: { id: campeonatoId } },
         relations: ['fase_actual', 'campeonato'],
@@ -92,12 +95,26 @@ export class CampeonatosService {
         throw new Error('No hay una fase actual configurada para la categoría.');
       }
 
-      // Verifica que la fase actual permita la generación del calendario
       if (faseActual.orden !== 0) {
         throw new Error('El calendario solo se puede generar en la fase de inscripción.');
       }
 
-      // Obtén los equipos de la categoría específica
+       // Avanza la fase del campeonato
+       const siguienteFase = await this.faseRepository.findOne({
+        where: { orden: faseActual.orden + 1 },
+      });
+
+      // Actualiza la fase de posiciones
+      await this.actualizarFasePosiciones(categoriaId, siguienteFase.id);
+
+      if (!siguienteFase) {
+        throw new Error('No se encontró la siguiente fase para la categoría.');
+      }
+
+      categoria.fase_actual = siguienteFase;
+      await this.categoriaRepository.save(categoria);
+
+      // Obtiene los equipos
       const equipos = await this.equipoRepository.find({
         where: { categoria: { id: categoriaId }, campeonato: { id: campeonatoId } },
         relations: ['categoria'],
@@ -107,27 +124,18 @@ export class CampeonatosService {
       if (equipos.length < 2) {
         throw new Error('No hay suficientes equipos en la categoría para generar partidos.');
       }
-      // Avanzar a la siguiente fase de la categoría
-      const siguienteFase = await this.faseRepository.findOne({
-        where: { orden: faseActual.orden + 1 },
-      });
 
-      if (!siguienteFase) {
-        throw new Error('No se encontró la siguiente fase para la categoría.');
-      }
-
-      categoria.fase_actual = siguienteFase;
-      await this.categoriaRepository.save(categoria);
-
-      // Implementa el algoritmo para crear los enfrentamientos
       const totalEquipos = equipos.length;
-      const totalFechas = totalEquipos - 1; // Cada equipo descansa una vez si son pares
+      const totalFechas = totalEquipos - 1;
       const partidos: Partido[] = [];
 
       for (let fecha = 0; fecha < totalFechas; fecha++) {
-        for (let i = 0; i < totalEquipos / 2; i++) {
+        for (let i = 0; i < Math.floor(totalEquipos / 2); i++) {
           const equipoLocal = equipos[i];
           const equipoVisitante = equipos[totalEquipos - i - 1];
+
+          // No crea el partido si el equipo local es igual al visitante
+          if (equipoLocal.id === equipoVisitante.id) continue;
 
           partidos.push(
             this.partidoRepository.create({
@@ -146,10 +154,12 @@ export class CampeonatosService {
         equipos.splice(1, 0, ultimoEquipo!);
       }
 
-      // Guarda todos los partidos generados
+      // Guarda los partidos generados
       const nuevosPartidos = await this.partidoRepository.save(partidos);
 
       
+
+     
 
       return nuevosPartidos;
     } catch (error) {
@@ -173,6 +183,25 @@ export class CampeonatosService {
     // Guardar los cambios en la base de datos
     return this.campeonatoRepository.save(campeonato);
   }
+
+
+  async actualizarFasePosiciones(categoriaId: number, nuevaFaseId: number): Promise<void> {
+    const nuevaFase = await this.faseRepository.findOne({ where: { id: nuevaFaseId } });
+    if (!nuevaFase) {
+      throw new NotFoundException('No se encontró la fase especificada.');
+    }
+
+    const posiciones = await this.posicionRepository.find({
+      where: { categoria: { id: categoriaId } },
+    });
+
+    for (const posicion of posiciones) {
+      posicion.fase = nuevaFase; // Asignar el objeto completo
+      await this.posicionRepository.save(posicion);
+    }
+  }
+
+
 
 }
 

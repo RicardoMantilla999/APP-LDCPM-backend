@@ -16,6 +16,8 @@ import { PartidosModule } from './partidos/partidos.module';
 import { GolesModule } from './goles/goles.module';
 import { TarjetasModule } from './tarjetas/tarjetas.module';
 import { PosicionesModule } from './posiciones/posiciones.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -43,8 +45,12 @@ import { PosicionesModule } from './posiciones/posiciones.module';
     GolesModule,
     TarjetasModule,
     PosicionesModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'media'),
+      serveRoot: '/media',
+    })
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

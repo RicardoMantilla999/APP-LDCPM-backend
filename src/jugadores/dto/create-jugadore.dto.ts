@@ -1,5 +1,6 @@
 import { Transform, Type } from "class-transformer";
-import { IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { OrigenJugador } from "src/common/enums/origen.enum";
 import { ManyToOne } from "typeorm";
 
 export class CreateJugadoreDto {
@@ -24,24 +25,43 @@ export class CreateJugadoreDto {
     apellidos: string;
 
     @IsNotEmpty({message:'El Dorsal es obligatorio'})
-    @IsNumber()
+    @Transform(({ value }) => parseInt(value, 10))
+    @IsNumber({},{message: 'Dorsal debe ser un numero'})
     dorsal: number;
 
     @IsNotEmpty({message:'Elija La Fecha de Nacimiento'})
     @Type(() => Date) 
     fecha_nacimiento: Date;
 
-    @IsNotEmpty({message:'Lugar de Nacimiento es obligatorio'})
+    @IsNotEmpty({message:'Cantón es obligatorio'})
     @IsString()
     @Transform(({ value }) => value?.toUpperCase()) 
-    lugar_nacimiento: string;
+    canton_juega: string;
 
-    @IsBoolean()
+    @IsNotEmpty({message:'Direccion es obligatorio'})
+    @IsString()
+    @Transform(({ value }) => value?.toUpperCase()) 
+    direccion: string;
+
+    @IsNotEmpty({message:'Telefono es obligatorio'})
+    @IsString()
+    telefono: string;
+
+    @IsNotEmpty({message:'Email es obligatorio'})
+    @IsEmail()
+    email: string;
+
+    @IsNotEmpty({message:'Origen es obligatorio'})
+    @IsEnum(OrigenJugador)
+    origen: OrigenJugador;
+
     @IsOptional()
-    suspendido?: boolean = false;
+    @IsString()
+    foto?: string; // Ruta de la foto
 
     @IsNotEmpty({message:'Elija el Equipo'})
-    @IsNumber()
+    @IsNumber({},{message: ' Equipo debe ser un numero'})
+    @Transform(({ value }) => parseInt(value, 10))
     equipo: number;
 
 

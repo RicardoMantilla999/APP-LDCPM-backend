@@ -1,3 +1,4 @@
+import { OrigenJugador } from "src/common/enums/origen.enum";
 import { Equipo } from "src/equipos/entities/equipo.entity";
 import { Gole } from "src/goles/entities/gole.entity";
 import { Tarjeta } from "src/tarjetas/entities/tarjeta.entity";
@@ -24,15 +25,24 @@ export class Jugador {
     @Column({ type: 'date', nullable: true })
     fecha_nacimiento: Date;
 
+    @Column()
+    canton_juega: string;
 
     @Column()
-    lugar_nacimiento: string;
-
+    direccion: string;
 
     @Column()
-    suspendido?: boolean = false;
+    telefono: string;
 
+    @Column()
+    email:string;
 
+    @Column({ type: 'enum', enum: OrigenJugador })
+    origen:  OrigenJugador;
+
+    @Column({nullable: true})
+    foto: string;
+    
     @ManyToOne(() => Equipo, (equipo) => equipo.jugador, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'equipo_id' })
     equipo: Equipo;

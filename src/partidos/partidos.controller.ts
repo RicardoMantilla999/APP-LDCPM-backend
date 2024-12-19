@@ -23,6 +23,11 @@ export class PartidosController {
     return this.partidosService.findAll(fase, cat, fecha);
   }
 
+  @Get('fase:fase/categoria:cat')
+  getPartidosCompletos(@Param('fase') fase: number, @Param('cat') cat: number) {
+    return this.partidosService.getPartidosAgrupadosPorFecha(fase, cat);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.partidosService.findOne(+id);

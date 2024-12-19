@@ -44,6 +44,19 @@ export class PartidosService {
     });
   }
 
+  async getPartidosAgrupadosPorFecha(fase: number, categoria: number) {
+    const partidos = await this.partidoRepository.find({
+      where: { categoria: { id: categoria }, fase: { id: fase } },
+      order: { nro_fecha: 'ASC', fecha: 'ASC', hora: 'ASC' },
+    });
+  
+    // Retorna directamente un array en lugar de un objeto agrupado
+    return partidos;
+  }
+  
+  
+
+
 
   async findOne(id: number) {
     return await this.partidoRepository.findBy({ id });

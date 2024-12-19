@@ -8,27 +8,31 @@ export class UpdateEquipoDto extends PartialType(CreateEquipoDto) {
     @IsOptional()
     id?: number;
 
-    @IsNotEmpty({message:'El Nombre es obligatorio'})
-    @Transform(({ value }) => value?.toUpperCase()) 
+    @IsNotEmpty({ message: 'El Nombre es obligatorio' })
+    @Transform(({ value }) => value?.toUpperCase())
     @IsString()
     nombre?: string;
-  
-    @IsNotEmpty({message:'El Uniforme es obligatorio'})
-    @Transform(({ value }) => value?.toUpperCase()) 
+
+    @IsNotEmpty({ message: 'El Uniforme es obligatorio' })
+    @Transform(({ value }) => value?.toUpperCase())
     @IsString()
     uniforme?: string;
-  
-    @IsNotEmpty({message:'Elija la Categoría'})
+
+    @IsOptional()
+    @IsString()
+    logo?: string;
+
+    @IsNotEmpty({ message: 'Elija la Categoría' })
     categoria?: number; // Se espera el ID de `Categoria`
-  
-    @IsNotEmpty({message:'Elija el Dirigente'})
+
+    @IsNotEmpty({ message: 'Elija el Dirigente' })
     dirigente?: number; // Se espera el ID de `Dirigente`
-  
-    @IsNotEmpty({message:'Elija la Fecha de Fundación'})
+
+    @IsNotEmpty({ message: 'Elija la Fecha de Fundación' })
     @Type(() => Date)
     fecha_fundacion?: Date;
 
-    @IsNotEmpty({message:'Campeonato es obligatorio'})
+    @IsNotEmpty({ message: 'Campeonato es obligatorio' })
     @IsNumber()
     campeonato?: number;
 

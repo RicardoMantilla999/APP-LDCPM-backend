@@ -39,11 +39,11 @@ export class Partido {
     equipo_2: Equipo;
 
     @ManyToOne(() => Fase, (fase) => fase.partido, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'fase_id' })
+    @JoinColumn({ name: 'faseId' })
     fase: Fase;
 
     @ManyToOne(() => Categoria, (categoria) => categoria.partido, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'categoria_id' })
+    @JoinColumn({ name: 'categoriaId' })
     categoria: Categoria;
 
     @OneToMany(() => Gole, (gol) => gol.partido, { cascade: true })

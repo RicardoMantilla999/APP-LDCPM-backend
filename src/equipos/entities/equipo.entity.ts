@@ -7,7 +7,7 @@ import { Gole } from "src/goles/entities/gole.entity";
 import { Jugador } from "src/jugadores/entities/jugador.entity";
 import { Partido } from "src/partidos/entities/partido.entity";
 import { Tarjeta } from "src/tarjetas/entities/tarjeta.entity";
-import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Equipo {
@@ -21,19 +21,24 @@ export class Equipo {
     @Column()
     uniforme: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, default: 0 })
     nro_sorteo: number;
 
     @Column({ type: 'date', nullable: true })
     fecha_fundacion: Date;
 
-    @ManyToOne(() => Categoria, (cat) => cat.categoria, { eager: true })
+    @Column({ nullable: true })
+    logo: string;
+
+    @ManyToOne(() => Categoria, (cat) => cat.categorias, { eager: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'categoria_id' })
     categoria: Categoria;
 
-    @ManyToOne(() => Dirigente, (dirigente) => dirigente.nombres, { eager: true })
+    @ManyToOne(() => Dirigente, (dirigente) => dirigente.nombres, { eager: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'dirigente_id' })
     dirigente: Dirigente;
 
-    @ManyToOne(() => Campeonato, (campeonato) => campeonato.equipos, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Campeonato, (campeonato) => campeonato.equipos, { eager: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'campeonato_id' })
     campeonato: Campeonato;
 

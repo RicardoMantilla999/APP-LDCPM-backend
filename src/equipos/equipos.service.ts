@@ -28,68 +28,69 @@ export class EquiposService {
     private readonly posicionesRepository: Repository<Posicione>
   ) { }
 
-  async create(createEquipoDto: CreateEquipoDto) {
+  async create(createEquipoDto: CreateEquipoDto, rutaLogo: string) {
     // Verificar si la categoría existe
     const categoria = await this.categoriaRepository.findOneBy({
-        id: createEquipoDto.categoria,
+      id: createEquipoDto.categoria,
     });
     if (!categoria) {
-        throw new NotFoundException('Categoría no encontrada');
+      throw new NotFoundException('Categoría no encontrada');
     }
 
     // Verificar si el dirigente existe
     const dirigente = await this.dirigenteRepository.findOne({
-        where: { id: createEquipoDto.dirigente },
+      where: { id: createEquipoDto.dirigente },
     });
     if (!dirigente) {
-        throw new NotFoundException('Dirigente no encontrado');
+      throw new NotFoundException('Dirigente no encontrado');
     }
 
     // Verificar si el campeonato existe
     const campeonato = await this.campeonatoRepository.findOne({
-        where: { id: createEquipoDto.campeonato },
+      where: { id: createEquipoDto.campeonato },
     });
     if (!campeonato) {
-        throw new NotFoundException('Campeonato no encontrado');
+      throw new NotFoundException('Campeonato no encontrado');
     }
 
     // Verificar si ya existe un equipo con el mismo nombre en la misma categoría
     const equipoExistente = await this.equipoRepository.findOne({
-        where: {
-            nombre: createEquipoDto.nombre,
-            categoria: { id: createEquipoDto.categoria },
-            campeonato: { id: createEquipoDto.campeonato },
-        },
-        relations: ['categoria', 'campeonato'], // Resolver las relaciones correctamente
+      where: {
+        nombre: createEquipoDto.nombre,
+        categoria: { id: createEquipoDto.categoria },
+        campeonato: { id: createEquipoDto.campeonato },
+      },
+      relations: ['categoria', 'campeonato'],
     });
 
     if (equipoExistente) {
-        throw new BadRequestException(
-            "El equipo " + createEquipoDto.nombre + " ya existe en la categoría " + categoria.categoria + "."
-        );
+      throw new BadRequestException(
+        `El equipo ${createEquipoDto.nombre} ya existe en la categoría ${categoria.categoria}.`,
+      );
     }
 
     // Crear y guardar el nuevo equipo
     const equipo = this.equipoRepository.create({
-        ...createEquipoDto,
-        categoria,
-        dirigente,
-        campeonato,
+      ...createEquipoDto,
+      categoria,
+      dirigente,
+      campeonato,
+      logo: rutaLogo, // Guardar la ruta del logo
     });
 
     const nuevoEquipo = await this.equipoRepository.save(equipo);
 
     // Crear un registro en la tabla de posiciones para el nuevo equipo
     const posicion = this.posicionesRepository.create({
-        equipo: nuevoEquipo,
-        categoria,
-        fase: categoria.fase_actual, // Asumiendo que tienes una fase asociada al campeonato
+      equipo: nuevoEquipo,
+      categoria,
+      fase: categoria.fase_actual, // Asumiendo que tienes una fase asociada al campeonato
     });
 
     await this.posicionesRepository.save(posicion);
 
     return nuevoEquipo;
-}
+  }
 
 
 
@@ -136,35 +137,39 @@ export class EquiposService {
 
 
   async findOne(id: number) {
-    return await this.equipoRepository.findOneBy({ id });
+    return this.equipoRepository.findOne({
+      where: { id },
+      relations: ['categoria', 'dirigente'], // Asegúrate de incluir las relaciones
+    });
   }
 
-  async update(id: number, updateEquipoDto: UpdateEquipoDto) {
+  async update(id: number, updateEquipoDto: UpdateEquipoDto): Promise<Equipo> {
     const equipo = await this.equipoRepository.findOne({ where: { id } });
 
     if (!equipo) {
-      throw new NotFoundException(`Equipo with ID ${id} not found`);
+      throw new NotFoundException(`Equipo con ID ${id} no encontrado`);
     }
-    // Actualizar los campos del equipo
-    Object.assign(equipo, updateEquipoDto);
-    // Si hay una categoría, podrías validar y asignarla
+
+    // Verificar si la categoría existe (solo si se envía)
     if (updateEquipoDto.categoria) {
-      const categoria = await this.categoriaRepository.findOne({
-        where: { id: updateEquipoDto.categoria },
-      });
-      const dirigente = await this.dirigenteRepository.findOne({
-        where: { id: updateEquipoDto.dirigente }
-      })
-      if (!categoria) {
-        throw new NotFoundException(`Categoria with ID ${updateEquipoDto.categoria} not found`);
-      }
-      if (!dirigente) {
-        throw new NotFoundException(`Dirigente with ID ${updateEquipoDto.dirigente} not found`);
-      }
+      const categoria = await this.categoriaRepository.findOneBy({ id: updateEquipoDto.categoria });
+      if (!categoria) throw new NotFoundException('Categoría no encontrada');
       equipo.categoria = categoria;
     }
-    return await this.equipoRepository.save(equipo);
+
+    // Verificar si el dirigente existe (solo si se envía)
+    if (updateEquipoDto.dirigente) {
+      const dirigente = await this.dirigenteRepository.findOne({ where: { id: updateEquipoDto.dirigente } });
+      if (!dirigente) throw new NotFoundException('Dirigente no encontrado');
+      equipo.dirigente = dirigente;
+    }
+
+    // Actualizar datos del equipo
+    Object.assign(equipo, updateEquipoDto);
+
+    return this.equipoRepository.save(equipo);
   }
+
 
   async remove(id: number) {
     return await this.equipoRepository.delete({ id });
@@ -209,5 +214,24 @@ export class EquiposService {
       relations: ['categoria'], // Incluye la relación con la categoría
     });
   }
+
+
+  async getCampeonatoById(id: number): Promise<Campeonato> {
+    const campeonato = await this.campeonatoRepository.findOne({ where: { id } });
+    if (!campeonato) {
+      throw new NotFoundException('Campeonato no encontrado');
+    }
+    return campeonato;
+  }
+
+  // Método para obtener la categoría por ID
+  async getCategoriaById(id: number): Promise<Categoria> {
+    const categoria = await this.categoriaRepository.findOne({ where: { id } });
+    if (!categoria) {
+      throw new NotFoundException('Categoría no encontrada');
+    }
+    return categoria;
+  }
+
 
 }

@@ -8,9 +8,11 @@ import { TipoTarjeta } from 'src/common/enums/tarjetas.enum';
 import { Jugador } from 'src/jugadores/entities/jugador.entity';
 import { Partido } from 'src/partidos/entities/partido.entity';
 import { Equipo } from 'src/equipos/entities/equipo.entity';
+import { Resultado } from '../tarjetas/tarjetas.interface';
 
 @Injectable()
 export class TarjetasService {
+
 
   constructor(
     @InjectRepository(Tarjeta)
@@ -23,6 +25,8 @@ export class TarjetasService {
     private readonly equipoRepository: Repository<Equipo>,
 
   ) { }
+
+
 
   create(createTarjetaDto: CreateTarjetaDto) {
     return 'This action adds a new tarjeta';
@@ -79,6 +83,83 @@ export class TarjetasService {
     });
   }
 
+
+
+
+  async getTarjetasPorFechas(categoriaId: number, equipoId: number, faseId: number) {
+    categoriaId = Number(categoriaId);
+    equipoId = Number(equipoId);
+    faseId = Number(faseId);
+
+    // Validar parámetros
+    if (isNaN(categoriaId) || isNaN(equipoId) || isNaN(faseId)) {
+      throw new Error('Parámetros inválidos. Asegúrate de enviar números válidos.');
+    }
+
+    // Obtener las fechas de la fase
+    const partidos = await this.partidoRepository
+      .createQueryBuilder('partido')
+      .where('partido.faseId = :faseId', { faseId })
+      .orderBy('partido.nro_fecha', 'ASC')
+      .getMany();
+
+    const fechas = partidos.map((partido) => `Fecha ${partido.nro_fecha}`);
+
+    // Obtener tarjetas
+    const tarjetas = await this.tarjetaRepository
+      .createQueryBuilder('tarjeta')
+      .leftJoinAndSelect('tarjeta.jugador', 'jugador')
+      .leftJoinAndSelect('tarjeta.partido', 'partido')
+      .where('partido.categoriaId = :categoriaId', { categoriaId })
+      .andWhere('tarjeta.equipoId = :equipoId', { equipoId })
+      .andWhere('partido.faseId = :faseId', { faseId })
+      .orderBy('jugador.id', 'ASC')
+      .addOrderBy('partido.nro_fecha', 'ASC')
+      .getMany();
+
+    // Procesar tarjetas
+    const resultado: Resultado = {};  // Define el tipo de resultado
+
+    tarjetas.forEach((tarjeta) => {
+      const jugadorId = tarjeta.jugador.id;
+      if (!resultado[jugadorId]) {
+        resultado[jugadorId] = {
+          nombres: tarjeta.jugador.nombres,
+          apellidos: tarjeta.jugador.apellidos,
+          fechas: {},
+        };
+      }
+
+      // Agregar la tarjeta a la fecha correspondiente
+      const nroFecha = `Fecha ${tarjeta.partido.nro_fecha}`;
+      resultado[jugadorId].fechas[nroFecha] = tarjeta.tipo || 'ST';
+    });
+
+    // Asegurarse de que todos los jugadores tengan una entrada para todas las fechas
+    Object.values(resultado).forEach((jugador) => {
+      fechas.forEach((fecha) => {
+        if (!jugador.fechas[fecha]) {
+          jugador.fechas[fecha] = 'ST';  // Si no tiene tarjeta, asignar "ST"
+        }
+      });
+    });
+    return resultado;
+  }
+
+
+
+  private async obtenerNumeroTotalDeFechas(faseId: number, categoriaId: number): Promise<number> {
+    // Consulta para obtener el número total de fechas
+    const result = await this.tarjetaRepository
+      .createQueryBuilder('tarjeta')
+      .leftJoin('tarjeta.partido', 'partido')
+      .where('partido.faseId = :faseId', { faseId })
+      .andWhere('partido.categoriaId = :categoriaId', { categoriaId })
+      .select('MAX(partido.nro_fecha)', 'maxFecha')
+      .getRawOne();
+
+    return parseInt(result.maxFecha, 10) || 0;
+  }
 
 
 }

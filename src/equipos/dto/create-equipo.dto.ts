@@ -27,11 +27,16 @@ export class CreateEquipoDto {
 
     @IsNotEmpty({ message: 'Campeonato es obligatorio' })
     @IsNumber()
+    @Type(() => Number)
     campeonato: number;
 
     @IsOptional()
     @IsNumber()
-    nro_sorteo: number;
+    @Type(() => Number)
+    nro_sorteo?: number = 0;
 
+    @IsOptional()
+    @IsString()
+    logo?: string;
 
 }

@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TarjetasService } from './tarjetas.service';
 import { CreateTarjetaDto } from './dto/create-tarjeta.dto';
 import { UpdateTarjetaDto } from './dto/update-tarjeta.dto';
 import { TipoTarjeta } from 'src/common/enums/tarjetas.enum';
+import { Resultado } from '../tarjetas/tarjetas.interface';
+
 
 @Controller('tarjetas')
 export class TarjetasController {
@@ -43,5 +45,14 @@ async guardarTarjeta(@Body() datos: { jugadorId: number; partidoId: number; equi
 async obtenerTarjetasPorPartido(@Param('partidoId') partidoId: number) {
   return await this.tarjetasService.obtenerTarjetasPorPartido(partidoId);
 }
+
+@Get('/reporte/:categoriaId/:equipoId/:faseId')
+  async getReporteTarjetas(
+    @Param('categoriaId') categoriaId: number,
+    @Param('equipoId') equipoId: number,
+    @Param('faseId') faseId: number,
+  ) {
+    return this.tarjetasService.getTarjetasPorFechas(categoriaId, equipoId, faseId);
+  }
 
 }

@@ -111,17 +111,17 @@ export class GolesService {
   }
 
   async guardarGoles(jugadorId: number, goles: number, partidoId: number, equipoId: number): Promise<void> {
-   
+
     // Buscar el jugador, equipo y partido por sus IDs
     const jugador = await this.jugadoresRepository.findOne({ where: { id: jugadorId } });
     const equipo = await this.equiposRepository.findOne({ where: { id: equipoId } });
     const partido = await this.partidosRepository.findOne({ where: { id: partidoId } });
-  
+
     // Verificar si existen los registros
     if (!jugador || !equipo || !partido) {
       throw new Error('Jugador, equipo o partido no encontrado');
     }
-  
+
     // Crear un nuevo registro de goles
     const nuevoGol = this.golesRepository.create({
       goles, // Cantidad de goles
@@ -129,10 +129,10 @@ export class GolesService {
       equipo,  // Relación con el equipo
       partido  // Relación con el partido
     });
-  
+
     // Guardar el nuevo registro en la base de datos
     await this.golesRepository.save(nuevoGol);
-  
+
     await this.actualizarResultadoPartido(partidoId);
   }
 
@@ -177,6 +177,38 @@ export class GolesService {
   }
 
 
+  async getGoleadoresByCategoria(categoriaId: number, cantidad: number): Promise<any> {
+    const goles = await this.golesRepository.find({
+      relations: ['partido', 'partido.categoria', 'jugador', 'jugador.equipo'],
+      where: {
+        partido: {
+          categoria: {
+            id: categoriaId,
+          },
+        },
+      },
+    });
 
+    const goleadores = goles.reduce((acumulado, actual) => {
+      if (!acumulado[actual.jugador.id]) {
+        acumulado[actual.jugador.id] = {
+          jugadorId: actual.jugador.id,
+          nombres: actual.jugador.nombres,
+          apellidos: actual.jugador.apellidos,
+          equipoId: actual.jugador.equipo.id,
+          equipoNombre: actual.jugador.equipo.nombre,
+          totalGoles: 0,
+        };
+      }
+      acumulado[actual.jugador.id].totalGoles += actual.goles;
+      return acumulado;
+    }, {});
+
+    const resultado = Object.keys(goleadores).map((jugadorId) => goleadores[jugadorId]);
+
+    resultado.sort((a, b) => b.totalGoles - a.totalGoles);
+
+    return resultado.slice(0, cantidad);
+  }
 
 }
