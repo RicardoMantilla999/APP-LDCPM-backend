@@ -172,7 +172,7 @@ export class PartidosService {
     return this.partidoRepository.find({
       where: {
         categoria: { id: categoriaId },
-        fase: { id: 3 },
+        fase: { orden: 2 },
       },
       order: { grupo: { nombre: 'DESC' } },
       relations: ['categoria', 'fase'],
@@ -184,7 +184,7 @@ export class PartidosService {
     return this.partidoRepository.find({
       where: {
         categoria: { id: categoriaId },
-        fase: { id: 4 },
+        fase: { orden: 3 },
       },
       order: { grupo: { nombre: 'DESC' } },
       relations: ['categoria', 'fase'],
@@ -197,7 +197,7 @@ export class PartidosService {
     return this.partidoRepository.find({
       where: {
         categoria: { id: categoriaId },
-        fase: { id: 9 },
+        fase: { orden: 4 },
       },
       order: { grupo: { nombre: 'DESC' } },
       relations: ['categoria', 'fase'],
@@ -210,7 +210,7 @@ export class PartidosService {
     const partidoFinal = await this.partidoRepository.findOne({
       where: {
         categoria: { id: categoriaId },
-        fase: { id: 9 }
+        fase: { orden: 4 }
       },
       relations: ['equipo_1', 'equipo_2'],
     });
