@@ -100,11 +100,6 @@ export class PosicionesService {
 }
 
 
-
-
-
-
-
   async obtenerPosiciones(categoriaId: number, faseId: number): Promise<Posicione[]> {
     return this.posicionRepository.find({
       where: {

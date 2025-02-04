@@ -1,57 +1,96 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsuariosService } from 'src/usuarios/usuarios.service';
 import { RegistrarDto } from './dto/registrar.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcryptjs from 'bcryptjs';
+import { Rol } from 'src/common/enums/rol.enum';
+import { rootCertificates } from 'tls';
 
 @Injectable()
 export class AuthService {
 
     constructor(
         private readonly usuariosService: UsuariosService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
     ) { }
 
-    async registrar({ username, password, rol}: RegistrarDto) {
-        const usuario = await this.usuariosService.findOneByUsername(username);
-
-        if (usuario) {
-            throw new BadRequestException('Usuario ya existe');
+    async registrar({ username, email, password, rol }: RegistrarDto) {
+        // Verificar si el username o email ya existe
+        const usuarioExistente = await this.usuariosService.findOneByUsernameOrEmail(username, email);
+        if (usuarioExistente) {
+            throw new BadRequestException('El username o el email ya están registrados.');
         }
-        await this.usuariosService.create({
+
+        // Hashear la contraseña
+        const hashedPassword = await bcryptjs.hash(password, 10);
+
+        // Crear el usuario
+        const nuevoUsuario = await this.usuariosService.create({
             username,
-            password: await bcryptjs.hash(password, 10),
+            email,
+            password: hashedPassword,
+            rol: rol || Rol.USER, // Valor predeterminado si no se especifica
         });
+
         return {
-            username,
-            rol,
+            message: 'Usuario registrado exitosamente.',
+            username: nuevoUsuario.username,
+            email: nuevoUsuario.email,
         };
     }
 
-    async login({ username, password }: LoginDto) {
-        const usuario = await this.usuariosService.findByUsernameWithPassword(username);
+    //async perfil({ email, rol }: { username: string; rol: string }) {
+    //  return await this.usuariosService.findOneByEmail(email);
+    // }
+
+
+    async login(email: string, password: string) {
+        if (!password) {
+            throw new BadRequestException('La contraseña no puede estar vacía');
+        }
+
+        const usuario = await this.usuariosService.findByEmailWithPassword(email);
         if (!usuario) {
-            throw new UnauthorizedException('Usuario '+username+' No Existe');
+            throw new UnauthorizedException('Credenciales inválidas');
         }
 
-        const isPasswordValid = await bcryptjs.compare(password, usuario.password);
-        if (!isPasswordValid) {
-            throw new UnauthorizedException('Contraseña Incorrecta');
+        const isMatch = await bcryptjs.compare(password, usuario.password);
+        if (!isMatch) {
+            throw new UnauthorizedException('Credenciales inválidas');
         }
 
-        const payload = { username: usuario.username, rol: usuario.rol };
+        // Generar el payload
+        const payload = { sub: usuario.id, username: usuario.username, email: usuario.email, rol: usuario.rol };
 
-        const token = await this.jwtService.signAsync(payload)
+        // Generar Access Token (expira en 15 min)
+        const access_token = await this.jwtService.signAsync(payload, { expiresIn: '20m' });
 
-        return {
-            token,
-            username
-        };
+        // Generar Refresh Token (expira en 7 días)
+        const refresh_token = await this.jwtService.signAsync(payload, { expiresIn: '30m' });
+
+        return { access_token, refresh_token, rol: usuario.rol };
     }
 
-    async perfil({ username, rol }: { username: string; rol: string }) {
-        return await this.usuariosService.findOneByUsername(username);
+    async refreshToken(refreshToken: string) {
+        try {
+            // Verificar si el refresh_token es válido
+            const decoded = this.jwtService.verify(refreshToken);
+            const payload = { sub: decoded.sub, username: decoded.username, email: decoded.email, rol: decoded.rol };
+
+            // Generar un nuevo access_token (5 min)
+            const newAccessToken = await this.jwtService.signAsync(payload, { expiresIn: '20m' });
+
+            // Generar un nuevo refresh_token (10 min)
+            const newRefreshToken = await this.jwtService.signAsync(payload, { expiresIn: '30m' });
+
+            return { access_token: newAccessToken, refresh_token: newRefreshToken };
+        } catch (error) {
+            throw new UnauthorizedException('Refresh token inválido o expirado');
+        }
     }
+
+
+
 
 }

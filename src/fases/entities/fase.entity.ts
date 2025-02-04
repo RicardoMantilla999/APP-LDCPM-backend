@@ -1,5 +1,6 @@
 import { Campeonato } from "src/campeonatos/entities/campeonato.entity";
 import { Categoria } from "src/categorias/entities/categoria.entity";
+import { Equipo } from "src/equipos/entities/equipo.entity";
 import { Gole } from "src/goles/entities/gole.entity";
 import { Grupo } from "src/grupos/entities/grupo.entity";
 import { Partido } from "src/partidos/entities/partido.entity";
@@ -25,4 +26,7 @@ export class Fase {
 
     @OneToMany(() => Gole, (gol) => gol.goles, { cascade: true })
     goles: Gole[];
+    
+    @OneToMany(() => Equipo, (equipo) => equipo.fase_actual, { cascade: true })
+    equipos: Equipo[];
 }

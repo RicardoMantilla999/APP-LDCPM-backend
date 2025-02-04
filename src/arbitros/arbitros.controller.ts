@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseFilters, UseGuards } from '@nestjs/common';
 import { ArbitrosService } from './arbitros.service';
 import { CreateArbitroDto } from './dto/create-arbitro.dto';
 import { UpdateArbitroDto } from './dto/update-arbitro.dto';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Controller('arbitros')
 export class ArbitrosController {

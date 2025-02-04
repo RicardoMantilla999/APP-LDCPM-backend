@@ -24,10 +24,10 @@ export class CreateJugadoreDto {
     @Transform(({ value }) => value?.toUpperCase()) 
     apellidos: string;
 
-    @IsNotEmpty({message:'El Dorsal es obligatorio'})
+    @IsOptional()
     @Transform(({ value }) => parseInt(value, 10))
     @IsNumber({},{message: 'Dorsal debe ser un numero'})
-    dorsal: number;
+    dorsal?: number;
 
     @IsNotEmpty({message:'Elija La Fecha de Nacimiento'})
     @Type(() => Date) 

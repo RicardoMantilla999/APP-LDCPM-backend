@@ -1,20 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegistrarDto } from './dto/registrar.dto';
 import { LoginDto } from './dto/login.dto';
-import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
-import { ActiveUser } from 'src/common/decorators/active-user.decorator';
-import { Auth } from './decorators/auth.decorator';
-import { Rol } from 'src/common/enums/rol.enum';
-
-
-interface RequestWithUser extends Request {
-    usuario: {
-        username: string,
-        rol: string
-
-    }
-}
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -30,18 +18,34 @@ export class AuthController {
     }
 
     @Post('login')
-    login(
-        @Body()
-        loginDto: LoginDto,
-    ) {
-        return this.authService.login(loginDto);
+    async login(@Body() loginDto: LoginDto) {
+      const { email, password } = loginDto;
+      return this.authService.login(email, password); // Se pasan los valores de email y password
     }
 
-    @Get('perfil')
-    @Auth(Rol.USER)
-    perfil(@ActiveUser() user: UserActiveInterface) {
-        console.log(user)
-        return this.authService.perfil(user);
+    // @Get('perfil')
+    // @Auth(Rol.USER)
+    // perfil(@ActiveUser() user: UserActiveInterface) {
+    //     console.log(user)
+    //     return this.authService.perfil(user);
+    // }
+
+    @Get('campeonatos')
+    getDashboard(@Request() req) {
+      const user = req.user;  // Aquí obtienes el usuario del token
+      const userRole = user.role;  // Accede al rol del usuario
+  
+      // Verifica si el usuario tiene el rol adecuado
+      if (userRole !== 'ADMIN') {
+        throw new UnauthorizedException('You do not have permission to access this resource');
+      }
+  
+      return { message: 'Welcome to the admin dashboard' };
+    }
+
+    @Post('refresh')
+    async refreshToken(@Body('refresh_token') refresh_token: string) {
+        return this.authService.refreshToken(refresh_token);
     }
 
 }

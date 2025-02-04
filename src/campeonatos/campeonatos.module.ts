@@ -8,9 +8,10 @@ import { Partido } from 'src/partidos/entities/partido.entity';
 import { Equipo } from 'src/equipos/entities/equipo.entity';
 import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Posicione } from 'src/posiciones/entities/posicione.entity';
+import { Grupo } from 'src/grupos/entities/grupo.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Campeonato, Fase, Partido, Equipo, Categoria, Posicione])],
+  imports: [TypeOrmModule.forFeature([Campeonato, Fase, Partido, Equipo, Categoria, Posicione, Grupo])],
   controllers: [CampeonatosController],
   providers: [CampeonatosService],
 })

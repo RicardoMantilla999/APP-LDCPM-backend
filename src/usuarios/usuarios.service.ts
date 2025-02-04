@@ -11,29 +11,46 @@ export class UsuariosService {
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
-  ){}
+  ) { }
 
   async create(createUsuarioDto: CreateUsuarioDto) {
     return await this.usuarioRepository.save(createUsuarioDto);
   }
 
-  async findByUsernameWithPassword(username: string) {
+  async findByEmailWithPassword(email: string) {
     return await this.usuarioRepository.findOne({
-      where: { username },
+      where: { email },
       select: ['id', 'username', 'password', 'rol'],
     });
   }
+
+  async findAllUser(id: number) {
+    return await this.usuarioRepository.findOne({
+      where: { id },
+      select: ['id', 'username', 'password','email', 'rol'],
+    });
+  }
+
 
   async findAll() {
     return await this.usuarioRepository.find();
   }
 
-  async findOneByUsername(username: string) {
-    return await this.usuarioRepository.findOneBy({username});
+  async findOneByUsernameOrEmail(username: string, email: string): Promise<Usuario | undefined> {
+    return this.usuarioRepository.findOne({
+      where: [{ username }, { email }],
+    });
+  }
+
+  async findOneByEmail(email: string): Promise<Usuario | undefined> {
+    console.log('Buscando usuario con email:', email);  // Agregar log para verificar
+    return this.usuarioRepository.findOne({
+      where: { email },
+    });
   }
 
   async findOne(id: number) {
-    return await this.usuarioRepository.findOneBy({id});
+    return await this.usuarioRepository.findOneBy({ id });
   }
 
 

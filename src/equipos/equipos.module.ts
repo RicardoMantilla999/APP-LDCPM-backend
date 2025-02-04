@@ -12,9 +12,10 @@ import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Partido } from 'src/partidos/entities/partido.entity';
 import { Posicione } from 'src/posiciones/entities/posicione.entity';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
+import { Fase } from 'src/fases/entities/fase.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Campeonato, Posicione])],
+  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Campeonato, Posicione, Fase])],
   controllers: [EquiposController],
   providers: [EquiposService],
 })

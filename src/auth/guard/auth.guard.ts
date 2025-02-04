@@ -8,11 +8,16 @@ export class AuthGuard implements CanActivate {
 
   constructor(
     private readonly jwtService: JwtService
-  ){}
-
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+
+    // Permitir solicitudes OPTIONS sin autenticación
+    if (request.method === 'OPTIONS') {
+      return true;
+    }
+
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException();

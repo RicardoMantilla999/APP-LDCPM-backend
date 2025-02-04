@@ -46,6 +46,9 @@ export class Partido {
     @JoinColumn({ name: 'categoriaId' })
     categoria: Categoria;
 
+    @ManyToOne(() => Grupo, { nullable: true })
+    grupo: Grupo;
+
     @OneToMany(() => Gole, (gol) => gol.partido, { cascade: true })
     goles: Gole[];
 

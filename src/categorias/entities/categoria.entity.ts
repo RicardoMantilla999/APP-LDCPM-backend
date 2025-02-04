@@ -33,7 +33,8 @@ export class Categoria {
     goles: Gole[];
     
     @OneToMany(() => Equipo, (equipo) => equipo.categoria, { cascade: true })
-    categorias: Equipo[];
+    equipos: Equipo[];
+
 }
 
 

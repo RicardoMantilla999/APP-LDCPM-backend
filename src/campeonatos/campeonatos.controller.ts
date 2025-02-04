@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, BadRequestException, ParseIntPipe, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, BadRequestException, ParseIntPipe, InternalServerErrorException, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { CampeonatosService } from './campeonatos.service';
 import { CreateCampeonatoDto } from './dto/create-campeonato.dto';
 import { UpdateCampeonatoDto } from './dto/update-campeonato.dto';
 import { Partido } from 'src/partidos/entities/partido.entity';
 import { Campeonato } from './entities/campeonato.entity';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Controller('campeonatos')
 export class CampeonatosController {
@@ -27,6 +28,27 @@ export class CampeonatosController {
     return this.campeonatosService.generarCalendario(campeonatoId, categoriaId);
   }
 
+  @Post('calendario-cuartos/:categoriaId')
+  async generarNuevoCalendario(@Param('categoriaId') categoriaId: number): Promise<void> {
+    try {
+      await this.campeonatosService.generarCalendarioCuartos(categoriaId);
+      return console.log('Calendario generado correctamente');
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  // Generar calendario para semifinales
+  @Post('generar/semifinales/:categoriaId')
+  async generarSemifinales(@Param('categoriaId') categoriaId: number){
+    await this.campeonatosService.generarCalendarioSemifinales(categoriaId);
+  }
+
+  // Generar calendario para la final
+  @Post('generar/final/:categoriaId')
+  async generarFinal(@Param('categoriaId') categoriaId: number) {
+      await this.campeonatosService.generarCalendarioFinal(categoriaId);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -51,4 +73,5 @@ export class CampeonatosController {
     return this.campeonatoService.actualizarCampeonato(id, updateCampeonatoDto);
   }
 
+  
 }

@@ -1,5 +1,7 @@
+import e from "express";
 import { Campeonato } from "src/campeonatos/entities/campeonato.entity";
-import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Equipo } from "src/equipos/entities/equipo.entity";
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Dirigente {
@@ -36,4 +38,6 @@ export class Dirigente {
     @JoinColumn({ name: 'campeonato_id' })
     campeonato: Campeonato;
 
+    @OneToMany(() => Equipo, (equipo) => equipo.dirigente, { cascade: true })
+    equipos: Equipo[];
 }
