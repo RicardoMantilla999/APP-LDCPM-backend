@@ -21,6 +21,7 @@ import { join } from 'path';
 
 @Module({
   imports: [
+    //Desarrollo
     TypeOrmModule.forRoot({
       type: "postgres",
       host: "localhost",
@@ -31,6 +32,19 @@ import { join } from 'path';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    //Producción
+    /*
+    TypeOrmModule.forRoot({
+      type: "postgres",
+      host: "localhost",
+      port: 5431,
+      username: "ldcpm",
+      password: "1234",
+      database: "LDCPM",
+      autoLoadEntities: true,
+      synchronize: true,
+    }),
+    */
     UsuariosModule,
     AuthModule,
     EquiposModule,

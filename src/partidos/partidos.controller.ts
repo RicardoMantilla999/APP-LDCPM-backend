@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, Query } from '@nestjs/common';
 import { PartidosService } from './partidos.service';
 import { CreatePartidoDto } from './dto/create-partido.dto';
 import { UpdatePartidoDto } from './dto/update-partido.dto';
 import { Gole } from 'src/goles/entities/gole.entity';
 import { Partido } from './entities/partido.entity';
+import { Equipo } from 'src/equipos/entities/equipo.entity';
 
 @Controller('partidos')
 export class PartidosController {
@@ -51,7 +52,7 @@ export class PartidosController {
   }
 
 
-  
+
 
   @Patch(':id/actualizar')
   async actualizarPartido(
@@ -61,6 +62,39 @@ export class PartidosController {
     return this.partidosService.actualizarPartido(id, cambios);
   }
 
+  //@Get(':id')
+  //findOne(@Param('id') id: string) {
+  //return this.partidosService.findOne(+id);
+  // }
 
+
+  @Get('Cuartos/:categoria')
+  async obtenerPartidosFaseCuartos(
+    @Param('categoria') categoria: number): Promise<Partido[]> {
+
+    return this.partidosService.obtenerPartidosFaseCuartos(+categoria);
+  }
+
+  @Get('Semifinal/:categoria')
+  async obtenerPartidosFaseSemifinal(
+    @Param('categoria') categoria: number): Promise<Partido[]> {
+
+    return this.partidosService.obtenerPartidosFaseSemifinal(+categoria);
+  }
+
+  @Get('Final/:categoria')
+  async obtenerPartidosFaseFinal(
+    @Param('categoria') categoria: number): Promise<Partido[]> {
+
+    return this.partidosService.obtenerPartidosFaseFinal(+categoria);
+  }
+
+
+  @Get('Campeon/:categoria')
+  async obtenerCampeon(
+    @Param('categoria') categoria: number): Promise<Equipo> {
+
+    return this.partidosService.obtenerCampeon(+categoria);
+  }
 
 }

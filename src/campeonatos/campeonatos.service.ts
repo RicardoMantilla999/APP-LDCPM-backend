@@ -119,8 +119,8 @@ export class CampeonatosService {
 
       if (totalEquipos > 15) {
         // Dividir equipos en dos grupos
-        const grupoA = await this.grupoRepository.findOne({ where: { nombre: 'Grupo A' } });
-        const grupoB = await this.grupoRepository.findOne({ where: { nombre: 'Grupo B' } });
+        const grupoA = await this.grupoRepository.findOne({ where: { nombre: 'A' } });
+        const grupoB = await this.grupoRepository.findOne({ where: { nombre: 'B' } });
 
         const mitad = Math.ceil(totalEquipos / 2);
 
@@ -230,50 +230,120 @@ export class CampeonatosService {
       throw new Error('No se encontró la siguiente fase.');
     }
 
-    // Obtener los 8 primeros equipos de la tabla de posiciones
-    const equiposClasificados = await this.posicionRepository.find({
+    // Obtener todos los equipos de la categoría
+    const equipos = await this.equipoRepository.find({
       where: { categoria: { id: categoriaId } },
-      order: { puntos: 'DESC', diferenciaGoles: 'DESC' },
-      take: 8,
-      relations: ['equipo'],
     });
 
-    if (equiposClasificados.length < 8) {
-      throw new Error('No hay suficientes equipos para generar el nuevo calendario.');
+    if (equipos.length < 8) {
+      throw new Error('No hay suficientes equipos para generar los cuartos de final.');
     }
 
-    // Obtener los grupos desde la base de datos
-    const grupoA = await this.grupoRepository.findOne({ where: { nombre: 'A' } });
-    const grupoB = await this.grupoRepository.findOne({ where: { nombre: 'B' } });
+    // Decidir el enfoque según el número de equipos
+    if (equipos.length > 15) {
+      // Más de 15 equipos: dividir en grupos A y B
+      const grupoA = await this.grupoRepository.findOne({ where: { nombre: 'A' } });
+      const grupoB = await this.grupoRepository.findOne({ where: { nombre: 'B' } });
 
-    if (!grupoA || !grupoB) {
-      throw new Error('No se encontraron los grupos requeridos. Asegúrate de que "Grupo A" y "Grupo B" existen en la base de datos.');
-    }
+      if (!grupoA || !grupoB) {
+        throw new Error('No se encontraron los grupos requeridos. Asegúrate de que "Grupo A" y "Grupo B" existen en la base de datos.');
+      }
 
-    // Dividir equipos en dos grupos
-    const equiposGrupoA = [equiposClasificados[0].equipo, equiposClasificados[2].equipo, equiposClasificados[4].equipo, equiposClasificados[6].equipo];
-    const equiposGrupoB = [equiposClasificados[1].equipo, equiposClasificados[3].equipo, equiposClasificados[5].equipo, equiposClasificados[7].equipo];
-
-    // Crear los partidos cruzados y asignar grupo
-    const partidos = [
-      { equipo_1: equiposGrupoA[0], equipo_2: equiposGrupoB[3], grupo: grupoA }, // 1ro vs 8vo
-      { equipo_1: equiposGrupoB[0], equipo_2: equiposGrupoA[3], grupo: grupoA }, // 2do vs 7mo
-      { equipo_1: equiposGrupoA[1], equipo_2: equiposGrupoB[2], grupo: grupoB }, // 3ro vs 6to
-      { equipo_1: equiposGrupoB[1], equipo_2: equiposGrupoA[2], grupo: grupoB }, // 4to vs 5to
-    ];
-
-    for (const partido of partidos) {
-      await this.partidoRepository.save({
-        equipo_1: partido.equipo_1,
-        equipo_2: partido.equipo_2,
-        fase: siguienteFase,
-        categoria: { id: categoriaId },
-        grupo: partido.grupo, // Asignar grupo al partido
-        culminado: false,
-        goles_1: 0,
-        goles_2: 0,
-        nro_fecha: 1, // Cuartos de final, misma fecha
+      // Obtener los 4 primeros de cada grupo según la tabla de posiciones
+      const posicionesGrupoA = await this.posicionRepository.find({
+        where: {
+          categoria: { id: categoriaId },
+          equipo: { grupo: { id: grupoA.id } }, // Aquí usamos el grupo de los equipos
+        },
+        order: { puntos: 'DESC', diferenciaGoles: 'DESC' },
+        take: 4, // Tomar los 4 primeros del grupo A
+        relations: ['equipo', 'equipo.grupo'], // Aseguramos que traemos la relación del grupo del equipo
       });
+
+      const posicionesGrupoB = await this.posicionRepository.find({
+        where: {
+          categoria: { id: categoriaId },
+          equipo: { grupo: { id: grupoB.id } }, // Aquí usamos el grupo de los equipos
+        },
+        order: { puntos: 'DESC', diferenciaGoles: 'DESC' },
+        take: 4, // Tomar los 4 primeros del grupo B
+        relations: ['equipo', 'equipo.grupo'], // Aseguramos que traemos la relación del grupo del equipo
+      });
+
+      if (posicionesGrupoA.length < 4 || posicionesGrupoB.length < 4) {
+        throw new Error('No hay suficientes equipos clasificados en los grupos para generar los cuartos de final.');
+      }
+
+      const equiposGrupoA = posicionesGrupoA.map(posicion => posicion.equipo);
+      const equiposGrupoB = posicionesGrupoB.map(posicion => posicion.equipo);
+
+      // Crear los partidos cruzados
+      const partidos = [
+        { equipo_1: equiposGrupoA[0], equipo_2: equiposGrupoB[3], grupo: grupoA }, // 1ro A vs 4to B
+        { equipo_1: equiposGrupoA[1], equipo_2: equiposGrupoB[2], grupo: grupoA }, // 2do A vs 3ro B
+        { equipo_1: equiposGrupoB[0], equipo_2: equiposGrupoA[3], grupo: grupoB }, // 1ro B vs 4to A
+        { equipo_1: equiposGrupoB[1], equipo_2: equiposGrupoA[2], grupo: grupoB }, // 2do B vs 3ro A
+      ];
+
+      for (const partido of partidos) {
+        await this.partidoRepository.save({
+          equipo_1: partido.equipo_1,
+          equipo_2: partido.equipo_2,
+          fase: siguienteFase,
+          categoria: { id: categoriaId },
+          grupo: partido.grupo,
+          culminado: false,
+          goles_1: 0,
+          goles_2: 0,
+          nro_fecha: 1, // Cuartos de final, misma fecha
+        });
+      }
+    } else {
+
+      const grupoA = await this.grupoRepository.findOne({ where: { nombre: 'A' } });
+      const grupoB = await this.grupoRepository.findOne({ where: { nombre: 'B' } });
+
+      if (!grupoA || !grupoB) {
+        throw new Error('No se encontraron los grupos requeridos. Asegúrate de que "Grupo A" y "Grupo B" existen en la base de datos.');
+      }
+
+      // Menos de 15 equipos: tomar los 8 mejores directamente
+      const equiposClasificados = await this.posicionRepository.find({
+        where: {
+          categoria: { id: categoriaId }
+        },
+        order: { puntos: 'DESC', diferenciaGoles: 'DESC' },
+        take: 8, // Tomar los 8 primeros
+        relations: ['equipo', 'equipo.grupo'],
+      });
+
+      if (equiposClasificados.length < 8) {
+        throw new Error('No hay suficientes equipos clasificados para generar los cuartos de final.');
+      }
+
+      const equipos = equiposClasificados.map(posicion => posicion.equipo);
+
+      // Crear los partidos cruzados
+      const partidos = [
+        { equipo_1: equipos[0], equipo_2: equipos[7], grupo: grupoA }, // 1ro vs 8vo
+        { equipo_1: equipos[2], equipo_2: equipos[5], grupo: grupoA }, // 2do vs 7mo
+        { equipo_1: equipos[1], equipo_2: equipos[6], grupo: grupoB }, // 3ro vs 6to
+        { equipo_1: equipos[3], equipo_2: equipos[4], grupo: grupoB }, // 4to vs 5to
+      ];
+
+      for (const partido of partidos) {
+        await this.partidoRepository.save({
+          equipo_1: partido.equipo_1,
+          equipo_2: partido.equipo_2,
+          fase: siguienteFase,
+          categoria: { id: categoriaId },
+          grupo: partido.grupo,
+          culminado: false,
+          goles_1: 0,
+          goles_2: 0,
+          nro_fecha: 1, // Cuartos de final, misma fecha
+        });
+      }
     }
 
     // Actualizar la fase actual de la categoría
@@ -283,6 +353,7 @@ export class CampeonatosService {
       await this.categoriaRepository.save(categoria);
     }
   }
+
 
 
 
@@ -406,40 +477,38 @@ export class CampeonatosService {
       where: { categoria: { id: categoriaId }, fase: { orden: 3 }, culminado: false },
       relations: ['fase'],
     });
-  
+
     if (partidosPendientes.length > 0) {
       throw new Error('Aún hay partidos pendientes en las semifinales.');
     }
-  
+
     // Obtener la fase actual y la siguiente
     const faseActual = await this.faseRepository.findOne({
       where: { categorias: { id: categoriaId } },
       relations: ['categorias'],
     });
-  
+
     if (!faseActual) {
       throw new Error('No se encontró la fase actual.');
     }
-  
+
     const siguienteFase = await this.faseRepository.findOne({
       where: { orden: faseActual.orden + 1 }, // Buscar la siguiente fase según el orden
     });
-  
+
     if (!siguienteFase) {
       throw new Error('No se encontró la siguiente fase.');
     }
-  
+
     // Obtener los partidos semifinales y clasificar los ganadores y perdedores por grupo
     const partidosSemifinales = await this.partidoRepository.find({
       where: { categoria: { id: categoriaId }, fase: { orden: 3 }, culminado: true },
       relations: ['equipo_1', 'equipo_2', 'grupo'],
     });
-  
+
     let ganadorGrupoA = [];
     let ganadorGrupoB = [];
-    let perdedorGrupoA = [];
-    let perdedorGrupoB = [];
-  
+
     for (const partido of partidosSemifinales) {
       const ganador =
         partido.goles_1 > partido.goles_2
@@ -447,32 +516,29 @@ export class CampeonatosService {
           : partido.goles_2 > partido.goles_1
             ? partido.equipo_2
             : null;
-  
+
       const perdedor = ganador === partido.equipo_1 ? partido.equipo_2 : partido.equipo_1;
-  
+
       if (!ganador) {
         throw new Error(`El partido entre ${partido.equipo_1.nombre} y ${partido.equipo_2.nombre} terminó en empate. Es necesario resolver el empate.`);
       }
-  
+
       if (partido.grupo.nombre === 'A') {
         ganadorGrupoA.push(ganador);
-        perdedorGrupoA.push(perdedor);
       } else if (partido.grupo.nombre === 'B') {
         ganadorGrupoB.push(ganador);
-        perdedorGrupoB.push(perdedor);
       }
     }
-  
-    if (!ganadorGrupoA || !ganadorGrupoB || !perdedorGrupoA || !perdedorGrupoB) {
+
+    if (!ganadorGrupoA || !ganadorGrupoB) {
       throw new Error('No se encontraron suficientes ganadores o perdedores para generar la final.');
     }
-  
+
     // Crear los partidos finales: uno entre ganadores y otro entre perdedores
     const partidosFinales = [
-      { equipo_1: ganadorGrupoA[0], equipo_2: ganadorGrupoB[0] }, // Ganadores del Grupo A vs Grupo B
-      { equipo_1: perdedorGrupoA[0], equipo_2: perdedorGrupoB[0] }, // Perdedores del Grupo A vs Grupo B
+      { equipo_1: ganadorGrupoA[0], equipo_2: ganadorGrupoB[0] }// Ganadores del Grupo A vs Grupo B
     ];
-  
+
     // Crear los partidos de la final y de los perdedores
     for (const partido of partidosFinales) {
       await this.partidoRepository.save({
@@ -483,10 +549,10 @@ export class CampeonatosService {
         culminado: false,
         goles_1: 0,
         goles_2: 0,
-        nro_fecha: partido.equipo_1 === ganadorGrupoA[0] ? 1 : 2, // Fecha 1 para la final, Fecha 2 para los perdedores
+        nro_fecha: 1, // Fecha 1 para la final, Fecha 2 para los perdedores
       });
     }
-  
+
     // Actualizar la fase_actual de la categoría
     const categoria = await this.categoriaRepository.findOne({ where: { id: categoriaId } });
     if (categoria) {
@@ -494,7 +560,7 @@ export class CampeonatosService {
       await this.categoriaRepository.save(categoria);
     }
   }
-  
+
 
 
 

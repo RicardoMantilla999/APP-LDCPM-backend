@@ -19,7 +19,7 @@ export class Jugador {
     @Column()
     apellidos: string;
 
-    @Column()
+    @Column({ nullable: true })
     dorsal: number;
 
     @Column({ type: 'date', nullable: true })
@@ -35,14 +35,14 @@ export class Jugador {
     telefono: string;
 
     @Column()
-    email:string;
+    email: string;
 
     @Column({ type: 'enum', enum: OrigenJugador })
-    origen:  OrigenJugador;
+    origen: OrigenJugador;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     foto: string;
-    
+
     @ManyToOne(() => Equipo, (equipo) => equipo.jugador, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'equipo_id' })
     equipo: Equipo;

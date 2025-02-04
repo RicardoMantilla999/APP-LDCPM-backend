@@ -43,4 +43,9 @@ export class AuthController {
       return { message: 'Welcome to the admin dashboard' };
     }
 
+    @Post('refresh')
+    async refreshToken(@Body('refresh_token') refresh_token: string) {
+        return this.authService.refreshToken(refresh_token);
+    }
+
 }

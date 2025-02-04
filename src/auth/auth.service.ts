@@ -46,32 +46,51 @@ export class AuthService {
 
 
     async login(email: string, password: string) {
-        console.log('Email:', email); // Agregar log para verificar
-        console.log('Password:', password); // Agregar log para verificar
         if (!password) {
             throw new BadRequestException('La contraseña no puede estar vacía');
         }
 
         const usuario = await this.usuariosService.findByEmailWithPassword(email);
-        console.log('Usuario:', usuario); // Agregar log para verificar
         if (!usuario) {
             throw new UnauthorizedException('Credenciales inválidas');
         }
 
-        console.log('Contraseña', password);
-        console.log('Contraseña hasheada', usuario.password);
         const isMatch = await bcryptjs.compare(password, usuario.password);
         if (!isMatch) {
             throw new UnauthorizedException('Credenciales inválidas');
         }
 
-        // Si la contraseña es correcta, generar el JWT
+        // Generar el payload
         const payload = { sub: usuario.id, username: usuario.username, email: usuario.email, rol: usuario.rol };
-        const token = await this.jwtService.signAsync(payload);
 
-        return { access_token: token, rol: usuario.rol };
+        // Generar Access Token (expira en 15 min)
+        const access_token = await this.jwtService.signAsync(payload, { expiresIn: '1m' });
+
+        // Generar Refresh Token (expira en 7 días)
+        const refresh_token = await this.jwtService.signAsync(payload, { expiresIn: '3m' });
+
+        return { access_token, refresh_token, rol: usuario.rol };
     }
 
-    
+    async refreshToken(refreshToken: string) {
+        try {
+            // Verificar si el refresh_token es válido
+            const decoded = this.jwtService.verify(refreshToken);
+            const payload = { sub: decoded.sub, username: decoded.username, email: decoded.email, rol: decoded.rol };
+
+            // Generar un nuevo access_token (5 min)
+            const newAccessToken = await this.jwtService.signAsync(payload, { expiresIn: '20m' });
+
+            // Generar un nuevo refresh_token (10 min)
+            const newRefreshToken = await this.jwtService.signAsync(payload, { expiresIn: '30m' });
+
+            return { access_token: newAccessToken, refresh_token: newRefreshToken };
+        } catch (error) {
+            throw new UnauthorizedException('Refresh token inválido o expirado');
+        }
+    }
+
+
+
 
 }
