@@ -82,10 +82,10 @@ export class PartidosService {
   }
 
 
-  async obtenerFechas(categoriaId: number): Promise<number[]> {
+  async obtenerFechas(categoriaId: number, faseId: number): Promise<number[]> {
     try {
       const partidos = await this.partidoRepository.find({
-        where: { categoria: { id: categoriaId } }, // Relaciona con la categoría por ID.
+        where: { categoria: { id: categoriaId }, fase: {id: faseId} }, // Relaciona con la categoría por ID.
         relations: ['categoria'], // Incluye la relación explícitamente.
         order: { nro_fecha: 'ASC' }, // Asegura el orden ascendente.
       });

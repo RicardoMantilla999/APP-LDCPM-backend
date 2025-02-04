@@ -6,7 +6,7 @@ export class LoginDto{
     @Transform(({value}) => value.trim())
     @IsString()
     @IsNotEmpty()
-    username: string;
+    email: string;
 
     @Transform(({value}) => value.trim())
     @IsString()

@@ -9,10 +9,6 @@ import { Partido } from './entities/partido.entity';
 export class PartidosController {
   constructor(private readonly partidosService: PartidosService) { }
 
-
-
-
-
   @Post()
   create(@Body() createPartidoDto: CreatePartidoDto) {
     return this.partidosService.create(createPartidoDto);
@@ -43,9 +39,9 @@ export class PartidosController {
     return this.partidosService.remove(+id);
   }
 
-  @Get('fechas/:categoriaId')
-  async obtenerFechas(@Param('categoriaId') categoriaId: number) {
-    return this.partidosService.obtenerFechas(categoriaId);
+  @Get('fechas/:categoriaId/:faseId')
+  async obtenerFechas(@Param('categoriaId') categoriaId: number, @Param('faseId') faseId: number): Promise<number[]> {
+    return this.partidosService.obtenerFechas(categoriaId, faseId);
   }
 
   @Patch(':id/actualizar-resultado')

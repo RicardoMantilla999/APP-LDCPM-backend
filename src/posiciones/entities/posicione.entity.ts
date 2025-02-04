@@ -1,6 +1,7 @@
 import { Categoria } from "src/categorias/entities/categoria.entity";
 import { Equipo } from "src/equipos/entities/equipo.entity";
 import { Fase } from "src/fases/entities/fase.entity";
+import { Grupo } from "src/grupos/entities/grupo.entity";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -33,7 +34,7 @@ export class Posicione {
     @Column({ default: 0 })
     partidosPerdidos: number;
 
-    @ManyToOne(() => Equipo)
+    @ManyToOne(() => Equipo, (equipo) => equipo.posiciones)
     @JoinColumn({ name: 'equipo_id' })
     equipo: Equipo;
 
@@ -44,6 +45,10 @@ export class Posicione {
     @ManyToOne(() => Fase)
     @JoinColumn({ name: 'fase_id' })
     fase: Fase;
+
+    @ManyToOne(() => Grupo, (grupo) => grupo.posiciones, { nullable: true })
+    grupo: Grupo;
+
 
 
 }

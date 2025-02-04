@@ -21,4 +21,8 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
     @IsOptional()
     id_rol?: string;
 
+    verificationToken: string;
+    isVerified: boolean;
+
+
 }

@@ -9,16 +9,19 @@ export class Usuario {
     //@Column({ primary: true, generated: true })
     id: number;
 
-    @Column({ unique: true, nullable: false })
+    @Column({ nullable: false })
     username: string;
+
+    @Column({ unique: true, nullable: false })
+    email: string;
 
     @Column({ nullable: false, select: false })
     password: string;
 
-    @DeleteDateColumn()
-    deletedAt: Date;
-
     @Column({ type: 'enum', default: Rol.USER, enum: Rol })
     rol: Rol;
+
+    @DeleteDateColumn()
+    deletedAt?: Date;
 
 }

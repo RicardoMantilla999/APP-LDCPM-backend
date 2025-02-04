@@ -8,6 +8,7 @@ import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Dirigente } from 'src/dirigentes/entities/dirigente.entity';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Posicione } from 'src/posiciones/entities/posicione.entity';
+import { Fase } from 'src/fases/entities/fase.entity';
 
 @Injectable()
 export class EquiposService {
@@ -25,7 +26,9 @@ export class EquiposService {
     @InjectRepository(Campeonato)
     private readonly campeonatoRepository: Repository<Campeonato>,
     @InjectRepository(Posicione)
-    private readonly posicionesRepository: Repository<Posicione>
+    private readonly posicionesRepository: Repository<Posicione>,
+    @InjectRepository(Fase)
+    private readonly faseRepository: Repository<Fase>,
   ) { }
 
   async create(createEquipoDto: CreateEquipoDto, rutaLogo: string) {
@@ -36,7 +39,7 @@ export class EquiposService {
     if (!categoria) {
       throw new NotFoundException('Categoría no encontrada');
     }
-
+  
     // Verificar si el dirigente existe
     const dirigente = await this.dirigenteRepository.findOne({
       where: { id: createEquipoDto.dirigente },
@@ -44,7 +47,7 @@ export class EquiposService {
     if (!dirigente) {
       throw new NotFoundException('Dirigente no encontrado');
     }
-
+  
     // Verificar si el campeonato existe
     const campeonato = await this.campeonatoRepository.findOne({
       where: { id: createEquipoDto.campeonato },
@@ -52,7 +55,23 @@ export class EquiposService {
     if (!campeonato) {
       throw new NotFoundException('Campeonato no encontrado');
     }
+  
+    // Verificar si la fase actual existe
+    const faseActual = await this.faseRepository.findOneBy({
+      id: createEquipoDto.fase_actual,
+    });
+    if (!faseActual) {
+      throw new NotFoundException('Fase actual no encontrada');
+    }
 
+    const siguienteFase = await this.faseRepository.findOne({
+      where: { orden: faseActual.orden + 1 }, // Buscar la siguiente fase según el orden
+    });
+  
+    if (!siguienteFase) {
+      throw new Error('No se encontró la siguiente fase.');
+    }
+  
     // Verificar si ya existe un equipo con el mismo nombre en la misma categoría
     const equipoExistente = await this.equipoRepository.findOne({
       where: {
@@ -62,36 +81,41 @@ export class EquiposService {
       },
       relations: ['categoria', 'campeonato'],
     });
-
+  
     if (equipoExistente) {
       throw new BadRequestException(
         `El equipo ${createEquipoDto.nombre} ya existe en la categoría ${categoria.categoria}.`,
       );
     }
-
+  
     // Crear y guardar el nuevo equipo
     const equipo = this.equipoRepository.create({
-      ...createEquipoDto,
-      categoria,
-      dirigente,
-      campeonato,
-      logo: rutaLogo, // Guardar la ruta del logo
+      ...createEquipoDto, // Propiedades básicas del DTO
+      categoria: { id: categoria.id }, // Relación con la categoría
+      dirigente: { id: dirigente.id }, // Relación con el dirigente
+      campeonato: { id: campeonato.id }, // Relación con el campeonato
+      fase_actual: { id: faseActual.id }, // Relación con la fase actual
+      logo: rutaLogo, // Ruta del logo
     });
-
+  
     const nuevoEquipo = await this.equipoRepository.save(equipo);
-
+  
     // Crear un registro en la tabla de posiciones para el nuevo equipo
-    const posicion = this.posicionesRepository.create({
-      equipo: nuevoEquipo,
-      categoria,
-      fase: categoria.fase_actual, // Asumiendo que tienes una fase asociada al campeonato
+    const nuevaPosicion = this.posicionesRepository.create({
+      equipo: nuevoEquipo, // Relación con el equipo recién creado
+      puntos: 0,
+      golesFavor: 0,
+      golesContra: 0,
+      diferenciaGoles: 0,
+      categoria: categoria,
+      fase: siguienteFase
     });
-
-    await this.posicionesRepository.save(posicion);
-
+  
+    await this.posicionesRepository.save(nuevaPosicion);
+  
     return nuevoEquipo;
   }
-
+  
 
 
 
