@@ -13,11 +13,11 @@ async function bootstrap() {
   app.setGlobalPrefix("api/");
 
   //app.use('uploads', express.static(join(__dirname,'..','uploads')));
-  app.use('media', express.static(path.join(__dirname,'..','media')));
+  app.use('media', express.static(path.join(__dirname, '..', 'media')));
 
   app.useStaticAssets(path.join(__dirname, '../media'));
   //app.useStaticAssets(path.join(__dirname, '../uploads'));
-  
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,11 +25,19 @@ async function bootstrap() {
       transform: true,
     })
   );
+  const allowedOrigins = process.env.ALLOWED_ORIGIN?.split(',') || ['http://localhost:4200'];
+
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGIN,  // Permite solicitudes desde este origen específico
-    //origin: 'https://backend-ldcpm-pnydajamg-ricardomantillas-projects.vercel.app/api/';
-    methods: 'GET,POST,PUT,DELETE, PATCH',   // Métodos HTTP permitidos
-    credentials: true                 // Permitir credenciales (si aplican)
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: 'GET,POST,PUT,DELETE,PATCH',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true
   });
 
   await app.listen(3000);
