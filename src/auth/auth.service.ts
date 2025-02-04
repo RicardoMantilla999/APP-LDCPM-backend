@@ -64,10 +64,10 @@ export class AuthService {
         const payload = { sub: usuario.id, username: usuario.username, email: usuario.email, rol: usuario.rol };
 
         // Generar Access Token (expira en 15 min)
-        const access_token = await this.jwtService.signAsync(payload, { expiresIn: '1m' });
+        const access_token = await this.jwtService.signAsync(payload, { expiresIn: '20m' });
 
         // Generar Refresh Token (expira en 7 días)
-        const refresh_token = await this.jwtService.signAsync(payload, { expiresIn: '3m' });
+        const refresh_token = await this.jwtService.signAsync(payload, { expiresIn: '30m' });
 
         return { access_token, refresh_token, rol: usuario.rol };
     }

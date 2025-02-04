@@ -18,19 +18,32 @@ import { TarjetasModule } from './tarjetas/tarjetas.module';
 import { PosicionesModule } from './posiciones/posiciones.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+      isGlobal: true,
+    }),
     //Desarrollo
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: "localhost",
-      port: 5431,
-      username: "ldcpm",
-      password: "1234",
-      database: "LDCPM",
-      autoLoadEntities: true,
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const isProduction = process.env.NODE_ENV === 'production';
+        return {
+          type: 'postgres',
+          url: isProduction ? configService.get<string>('DATABASE_URL') : undefined,
+          host: isProduction ? undefined : configService.get<string>('DATABASE_HOST'),
+          port: isProduction ? undefined : parseInt(configService.get<string>('DATABASE_PORT') || '5432'),
+          username: isProduction ? undefined : configService.get<string>('DATABASE_USER'),
+          password: isProduction ? undefined : String(configService.get<string>('DATABASE_PASSWORD') || ''),
+          database: isProduction ? undefined : configService.get<string>('DATABASE_NAME'),
+          autoLoadEntities: true,
+          synchronize: !isProduction, // Solo en desarrollo
+        };
+      },
     }),
     //Producción
     /*
