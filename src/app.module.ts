@@ -23,7 +23,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+      envFilePath: process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
       isGlobal: true,
     }),
     //Desarrollo
@@ -41,7 +41,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           password: isProduction ? undefined : String(configService.get<string>('DATABASE_PASSWORD') || ''),
           database: isProduction ? undefined : configService.get<string>('DATABASE_NAME'),
           autoLoadEntities: true,
-          synchronize: !isProduction, // Solo en desarrollo
+          synchronize: false//!isProduction, // Solo en desarrollo
         };
       },
     }),
@@ -80,20 +80,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || 'http://localhost:4200');
-        res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-        if (req.method === 'OPTIONS') {
-          return res.sendStatus(204);
-        }
-
-        next();
-      })
-      .forRoutes('*');
-  }
-}
+export class AppModule{}

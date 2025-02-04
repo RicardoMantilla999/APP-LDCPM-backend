@@ -8,15 +8,18 @@ import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  //const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix("api/");
+  // Configura CORS
+  app.enableCors({
+    origin: process.env.ALLOWED_ORIGIN || 'http://localhost:4200', // Permite solicitudes desde este origen
+    methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS', // Incluye OPTIONS para preflight
+    allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+    credentials: true, // Permite credenciales (cookies, tokens)
+  });
 
-  //app.use('uploads', express.static(join(__dirname,'..','uploads')));
+  app.setGlobalPrefix('api/');
   app.use('media', express.static(path.join(__dirname, '..', 'media')));
-
   app.useStaticAssets(path.join(__dirname, '../media'));
-  //app.useStaticAssets(path.join(__dirname, '../uploads'));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -25,20 +28,6 @@ async function bootstrap() {
       transform: true,
     })
   );
-  const allowedOrigins = process.env.ALLOWED_ORIGIN?.split(',') || ['http://localhost:4200'];
-
-  app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: 'GET,POST,PUT,DELETE,PATCH',
-    allowedHeaders: 'Content-Type, Authorization',
-    credentials: true
-  });
 
   await app.listen(3000);
 }
