@@ -3,8 +3,7 @@ import { JugadoresService } from './jugadores.service';
 import { CreateJugadoreDto } from './dto/create-jugadore.dto';
 import { UpdateJugadoreDto } from './dto/update-jugadore.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+
 
 @Controller('jugadores')
 export class JugadoresController {

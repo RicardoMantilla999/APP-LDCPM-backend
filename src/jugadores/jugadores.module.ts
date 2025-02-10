@@ -7,9 +7,10 @@ import { Equipo } from 'src/equipos/entities/equipo.entity';
 import { Gole } from 'src/goles/entities/gole.entity';
 import { Tarjeta } from 'src/tarjetas/entities/tarjeta.entity';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
+import { CloudinaryModule } from 'src/common/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Jugador,Equipo, Gole, Tarjeta,Campeonato])],
+  imports: [TypeOrmModule.forFeature([Jugador,Equipo, Gole, Tarjeta,Campeonato]), CloudinaryModule],
   controllers: [JugadoresController],
   providers: [JugadoresService],
 })

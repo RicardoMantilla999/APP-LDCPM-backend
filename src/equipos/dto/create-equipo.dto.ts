@@ -39,7 +39,7 @@ export class CreateEquipoDto {
     @IsString()
     logo?: string;
 
-    @IsNotEmpty({ message: 'Elija la Fase Actual' })
-    fase_actual: number = 10; // Se espera el ID de `Fase`
+    @IsNumber()
+    fase_actual: number = 5; // Se espera el ID de `Fase`
 
 }

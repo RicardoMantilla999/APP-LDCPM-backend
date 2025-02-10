@@ -6,14 +6,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Equipo } from 'src/equipos/entities/equipo.entity';
 import * as XLSX from 'xlsx';
-import { createFolderStructure, generateFileName } from './helpers/file.helper';
-import * as path from 'path';
-import * as fs from 'fs';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Gole } from 'src/goles/entities/gole.entity';
 import { Tarjeta } from 'src/tarjetas/entities/tarjeta.entity';
 import { TipoTarjeta } from 'src/common/enums/tarjetas.enum';
 import { OrigenJugador } from 'src/common/enums/origen.enum';
+import { SupabaseService } from 'src/common/cloudinary/cloudinary.service';
 
 interface JugadorExcelRow {
   cedula: string;
@@ -46,15 +44,13 @@ export class JugadoresService {
     private readonly equipoRepository: Repository<Equipo>,
     @InjectRepository(Campeonato)
     private readonly campeonatoRepository: Repository<Campeonato>,
-
+    private readonly supabaseService: SupabaseService,
   ) { }
 
 
   async create(createJugadorDto: CreateJugadoreDto, file?: Express.Multer.File): Promise<Jugador> {
     const { equipo, dorsal, cedula, apellidos, ...rest } = createJugadorDto;
-    const mediaBasePath = path.resolve(__dirname, '..', '..', 'media'); // Ruta absoluta a la carpeta "media"
 
-    // Conversión a números
     const equipoId = Number(equipo);
     const dorsalNumber = Number(dorsal);
 
@@ -101,35 +97,21 @@ export class JugadoresService {
       throw new Error(`La cédula ${cedula} ya está registrada en el campeonato.`);
     }
 
-    // Creación de la ruta de la foto
-    let fotoPath: string | undefined = undefined;
+    // Subir la imagen a Cloudinary y obtener la URL
+    let fotoUrl: string | undefined;
     if (file) {
-      const folderPath = createFolderStructure(campeonatoId, categoriaId, nombreEquipo);
-
-      if (!folderPath) {
-        throw new Error('No se pudo crear la estructura de carpetas.');
-      }
-
-      const fileName = generateFileName(dorsalNumber, apellidos);
-      if (!fileName) {
-        throw new Error('No se pudo generar el nombre del archivo.');
-      }
-
-      const absoluteFotoPath = path.join(folderPath, fileName);
-      fs.writeFileSync(absoluteFotoPath, file.buffer);
-
-      // Generar la ruta relativa solo desde "media"
-      fotoPath = path.relative(mediaBasePath, absoluteFotoPath).replace(/\\/g, '/'); // Asegura el formato UNIX
+      const folderPath = `campeonatos/${campeonatoId}/categorias/${categoriaId}/equipos/${nombreEquipo}`;
+      fotoUrl = await this.supabaseService.uploadImage(file, folderPath);
     }
 
-    // Creación del jugador
+    // Creación del jugador con la URL de la imagen
     const jugador = this.jugadorRepository.create({
       ...rest,
       cedula,
       dorsal: dorsalNumber,
       apellidos,
       equipo: { id: equipoId },
-      foto: fotoPath, // Guarda la ruta relativa desde "media"
+      foto: fotoUrl, // Se guarda la URL de Cloudinary en la base de datos
     });
 
     return this.jugadorRepository.save(jugador);
@@ -151,25 +133,53 @@ export class JugadoresService {
     return await this.jugadorRepository.findOne({ where: { id }, relations: ['equipo'] });
   }
 
-  async update(id: number, updateJugadorDto: UpdateJugadoreDto) {
-    const jugador = await this.jugadorRepository.findOne({ where: { id } });
-
+  async update(id: number, updateJugadorDto: UpdateJugadoreDto, file?: Express.Multer.File) {
+    const jugador = await this.jugadorRepository.findOne({ where: { id }, relations: ['equipo', 'equipo.categoria', 'equipo.categoria.campeonato'] });
+  
     if (!jugador) {
-      throw new NotFoundException(`Jugador con ID ${id} No encontrado`);
+      throw new NotFoundException(`Jugador con ID ${id} no encontrado`);
     }
+  
+    // Asignar los nuevos valores del DTO al jugador
     Object.assign(jugador, updateJugadorDto);
-    // Si hay una categoría, podrías validar y asignarla
+  
+    // Si se actualiza el equipo, validarlo
     if (updateJugadorDto.equipo) {
-      const equipo = await this.equipoRepository.findOne({
-        where: { id: updateJugadorDto.equipo },
-      });
+      const equipo = await this.equipoRepository.findOne({ where: { id: updateJugadorDto.equipo } });
       if (!equipo) {
-        throw new NotFoundException(`Equipo con ID ${updateJugadorDto.equipo} No encontrado`);
+        throw new NotFoundException(`Equipo con ID ${updateJugadorDto.equipo} no encontrado`);
       }
       jugador.equipo = equipo;
     }
+  
+    // Si se sube un nuevo archivo, actualizar la imagen en Cloudinary
+    if (file) {
+      // Eliminar la imagen anterior en Cloudinary si existía
+      if (jugador.foto) {
+        const publicId = this.extractPublicId(jugador.foto);
+        //await this.supabaseService.deleteImage(publicId);
+      }
+  
+      // Subir la nueva imagen
+      const campeonatoId = jugador.equipo.categoria.campeonato.id;
+      const categoriaId = jugador.equipo.categoria.id;
+      const nombreEquipo = jugador.equipo.nombre;
+  
+      const folderPath = `campeonatos/${campeonatoId}/categorias/${categoriaId}/equipos/${nombreEquipo}`;
+      const nuevaFotoUrl = await this.supabaseService.uploadImage(file, folderPath);
+      jugador.foto = nuevaFotoUrl; // Actualiza la URL en la base de datos
+    }
+  
     return await this.jugadorRepository.save(jugador);
   }
+  
+  // Método auxiliar para obtener el public_id de una imagen de Cloudinary
+  private extractPublicId(imageUrl: string): string {
+    const parts = imageUrl.split('/');
+    const filename = parts.pop()?.split('.')[0]; // Elimina la extensión
+    return `${parts.pop()}/${filename}`;
+  }
+  
 
   async remove(id: number) {
     return await this.jugadorRepository.delete(id);

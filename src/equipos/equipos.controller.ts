@@ -1,16 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, BadRequestException, NotFoundException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, BadRequestException, NotFoundException, UseGuards, InternalServerErrorException } from '@nestjs/common';
 import { EquiposService } from './equipos.service';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
-import { diskStorage } from 'multer';
+import multer, { diskStorage, memoryStorage } from 'multer';
 import * as fs from 'fs';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
+import { SupabaseService } from 'src/common/cloudinary/cloudinary.service';
 
 @Controller('equipos')
 export class EquiposController {
@@ -19,61 +20,35 @@ export class EquiposController {
     private readonly campeonatoRepository: Repository<Campeonato>,
     @InjectRepository(Categoria)
     private readonly categoriaRepository: Repository<Categoria>,
+    private cloudinaryService: SupabaseService,
   ) { }
 
   @Post()
-  @UseInterceptors(FileInterceptor('logo', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const { campeonato, categoria, nombre } = req.body;
-
-        console.log('Datos recibidos:', req.body); // Log para verificar los datos
-
-        if (!campeonato || !categoria || !nombre) {
-          return cb(new Error('Faltan datos necesarios para la carga del archivo'), null);
-        }
-
-        const sanitizedNombre = nombre.replace(/ /g, '-').toUpperCase();
-
-        const uploadPath = path.resolve('media', campeonato, categoria, sanitizedNombre, 'logo');
-
-        try {
-          fs.mkdirSync(uploadPath, { recursive: true });
-          console.log(`Directorio creado: ${uploadPath}`);
-        } catch (error) {
-          console.error('Error al crear el directorio:', error);
-          return cb(new Error('Error al crear el directorio de carga'), null);
-        }
-
-        cb(null, uploadPath);
-      },
-      filename: (req, file, cb) => {
-        const fileExt = path.extname(file.originalname);
-        cb(null, `logo${fileExt}`);
-      },
-    }),
-    fileFilter: (req, file, cb) => {
-      console.log('Archivo recibido:', file); // Log para verificar el archivo
-      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-        return cb(new Error('Solo se permiten imágenes JPG y PNG'), false);
-      }
-      cb(null, true);
-    },
-  }))
-  async create(@Body() createEquipoDto: CreateEquipoDto, @UploadedFile() logo: Express.Multer.File) {
+  @UseInterceptors(FileInterceptor('logo'))
+  async create(
+    @Body() createEquipoDto: CreateEquipoDto,
+    @UploadedFile() logo: Express.Multer.File
+  ) {
     try {
+      console.log('📥 Archivo recibido en el backend:', logo);
 
-      // Reemplazar espacios por guiones en los nombres
-      const sanitizedNombre = createEquipoDto.nombre.replace(/ /g, '-');
+      if (!logo) {
+        throw new Error('No se recibió ninguna imagen.');
+      }
 
-      // Aquí se puede continuar con la creación del equipo como antes
-      const rutaLogo = `${createEquipoDto.campeonato}/${createEquipoDto.categoria}/${sanitizedNombre}/logo/${logo.filename}`;
-      return this.equiposService.create(createEquipoDto, rutaLogo);
+      const folderPath = `media/campeonatos/${createEquipoDto.campeonato}/categorias/${createEquipoDto.categoria}/equipos`;
+      const logoUrl = await this.cloudinaryService.uploadImage(logo, folderPath);
+
+      console.log(`✅ Imagen subida con éxito a Cloudinary: ${logoUrl}`);
+
+      return this.equiposService.create(createEquipoDto, logoUrl);
     } catch (error) {
-      // Manejo de errores
+      console.error('⛔ Error al subir la imagen:', error);
       throw new Error('Error al crear el equipo: ' + error.message);
     }
   }
+
+
 
 
   @Get('/bycampeonato/:id')
