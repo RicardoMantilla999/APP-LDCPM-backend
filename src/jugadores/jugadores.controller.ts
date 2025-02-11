@@ -3,8 +3,7 @@ import { JugadoresService } from './jugadores.service';
 import { CreateJugadoreDto } from './dto/create-jugadore.dto';
 import { UpdateJugadoreDto } from './dto/update-jugadore.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+
 
 @Controller('jugadores')
 export class JugadoresController {
@@ -18,6 +17,7 @@ export class JugadoresController {
   ) {
     return this.jugadoresService.create(createJugadorDto, file);
   }
+
 
   @Get('/bycampeonato/:id')
   findAll(@Param('id') id: string) {
@@ -66,14 +66,21 @@ export class JugadoresController {
 
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateJugadoreDto: UpdateJugadoreDto) {
-    return this.jugadoresService.update(+id, updateJugadoreDto);
+  @UseInterceptors(FileInterceptor('foto'))
+  update(
+    @Param('id') id: string,
+    @Body() updateJugadorDto: UpdateJugadoreDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.jugadoresService.update(+id, updateJugadorDto, file);
   }
+
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.jugadoresService.remove(+id);
   }
+
 
 
   @Post('importar')

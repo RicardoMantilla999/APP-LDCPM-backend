@@ -16,48 +16,42 @@ import { PartidosModule } from './partidos/partidos.module';
 import { GolesModule } from './goles/goles.module';
 import { TarjetasModule } from './tarjetas/tarjetas.module';
 import { PosicionesModule } from './posiciones/posiciones.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CloudinaryModule } from './common/cloudinary/cloudinary.module';
+import { CloudinaryService } from './common/cloudinary/cloudinary.service';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
+    CloudinaryModule,
     ConfigModule.forRoot({
       envFilePath: process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
       isGlobal: true,
     }),
-    //Desarrollo
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const isProduction = process.env.NODE_ENV === 'production';
+      useFactory: () => {
+        if (process.env.NODE_ENV === 'production') {
+          // Solo en producción, utilizamos la URL completa
+          return {
+            type: 'postgres',
+            url: process.env.DATABASE_URL, // Usamos la URL de conexión para producción
+            autoLoadEntities: true,
+            synchronize: false, // En producción no usar synchronize
+          };
+        }
+        // En desarrollo, usamos los parámetros individuales
         return {
           type: 'postgres',
-          url: isProduction ? configService.get<string>('DATABASE_URL') : undefined,
-          host: isProduction ? undefined : configService.get<string>('DATABASE_HOST'),
-          port: isProduction ? undefined : parseInt(configService.get<string>('DATABASE_PORT') || '5432'),
-          username: isProduction ? undefined : configService.get<string>('DATABASE_USER'),
-          password: isProduction ? undefined : String(configService.get<string>('DATABASE_PASSWORD') || ''),
-          database: isProduction ? undefined : configService.get<string>('DATABASE_NAME'),
+          host: process.env.DATABASE_HOST,
+          port: parseInt(process.env.DATABASE_PORT, 10),
+          username: process.env.DATABASE_USER,
+          password: process.env.DATABASE_PASSWORD,
+          database: process.env.DATABASE_NAME,
           autoLoadEntities: true,
-          synchronize: false//!isProduction, // Solo en desarrollo
+          synchronize: true, // Solo en desarrollo usamos synchronize
         };
       },
     }),
-    //Producción
-    /*
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: "localhost",
-      port: 5431,
-      username: "ldcpm",
-      password: "1234",
-      database: "LDCPM",
-      autoLoadEntities: true,
-      synchronize: true,
-    }),
-    */
     UsuariosModule,
     AuthModule,
     EquiposModule,
@@ -72,12 +66,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     GolesModule,
     TarjetasModule,
     PosicionesModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'media'),
-      serveRoot: '/media',
+    MulterModule.register({
+      limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB por archivo
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, CloudinaryService],
 })
 export class AppModule{}

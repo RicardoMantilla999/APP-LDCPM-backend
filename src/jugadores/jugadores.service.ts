@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateJugadoreDto } from './dto/create-jugadore.dto';
 import { UpdateJugadoreDto } from './dto/update-jugadore.dto';
 import { Jugador } from './entities/jugador.entity';
@@ -6,14 +6,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Equipo } from 'src/equipos/entities/equipo.entity';
 import * as XLSX from 'xlsx';
-import { createFolderStructure, generateFileName } from './helpers/file.helper';
-import * as path from 'path';
-import * as fs from 'fs';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Gole } from 'src/goles/entities/gole.entity';
 import { Tarjeta } from 'src/tarjetas/entities/tarjeta.entity';
 import { TipoTarjeta } from 'src/common/enums/tarjetas.enum';
 import { OrigenJugador } from 'src/common/enums/origen.enum';
+import { CloudinaryService, } from 'src/common/cloudinary/cloudinary.service';
 
 interface JugadorExcelRow {
   cedula: string;
@@ -46,30 +44,28 @@ export class JugadoresService {
     private readonly equipoRepository: Repository<Equipo>,
     @InjectRepository(Campeonato)
     private readonly campeonatoRepository: Repository<Campeonato>,
-
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
 
   async create(createJugadorDto: CreateJugadoreDto, file?: Express.Multer.File): Promise<Jugador> {
     const { equipo, dorsal, cedula, apellidos, ...rest } = createJugadorDto;
-    const mediaBasePath = path.resolve(__dirname, '..', '..', 'media'); // Ruta absoluta a la carpeta "media"
 
-    // Conversión a números
     const equipoId = Number(equipo);
     const dorsalNumber = Number(dorsal);
 
     if (isNaN(equipoId) || isNaN(dorsalNumber)) {
-      throw new Error('El equipo o el dorsal no son valores numéricos válidos.');
+      throw new BadRequestException('El equipo o el dorsal no son valores numéricos válidos.');
     }
 
-    // Consulta del equipo y sus relaciones (campeonato y categoría)
+    // **📌 OBTENER INFORMACIÓN DEL EQUIPO Y RELACIONES**
     const equipoData = await this.equipoRepository.findOne({
       where: { id: equipoId },
       relations: ['categoria', 'categoria.campeonato'],
     });
 
     if (!equipoData) {
-      throw new Error(`No se encontró el equipo con ID ${equipoId}`);
+      throw new NotFoundException(`No se encontró el equipo con ID ${equipoId}`);
     }
 
     const campeonatoId = equipoData.categoria?.campeonato?.id;
@@ -77,18 +73,18 @@ export class JugadoresService {
     const nombreEquipo = equipoData.nombre;
 
     if (!campeonatoId || !categoriaId || !nombreEquipo) {
-      throw new Error('Faltan datos para crear la estructura de carpetas (campeonato, categoría o equipo).');
+      throw new InternalServerErrorException('Faltan datos para la estructura de carpetas.');
     }
 
-    // Validación: Verificar si el dorsal ya existe en el equipo
+    // **📌 VERIFICAR SI EL DORSAL YA EXISTE EN EL EQUIPO**
     const existingDorsal = await this.jugadorRepository.findOne({
       where: { dorsal: dorsalNumber, equipo: { id: equipoId } },
     });
     if (existingDorsal) {
-      throw new Error(`El dorsal ${dorsalNumber} ya está asignado a otro jugador en el equipo ${nombreEquipo}.`);
+      throw new ConflictException(`El dorsal ${dorsalNumber} ya está asignado en el equipo ${nombreEquipo}.`);
     }
 
-    // Validación: Verificar si la cédula ya existe en el mismo campeonato
+    // **📌 VERIFICAR SI LA CÉDULA YA EXISTE EN EL CAMPEONATO**
     const existingCedula = await this.jugadorRepository
       .createQueryBuilder('jugador')
       .innerJoin('jugador.equipo', 'equipo')
@@ -98,38 +94,30 @@ export class JugadoresService {
       .andWhere('campeonato.id = :campeonatoId', { campeonatoId })
       .getOne();
     if (existingCedula) {
-      throw new Error(`La cédula ${cedula} ya está registrada en el campeonato.`);
+      throw new ConflictException(`La cédula ${cedula} ya está registrada en el campeonato.`);
     }
 
-    // Creación de la ruta de la foto
-    let fotoPath: string | undefined = undefined;
+    // **📌 SUBIR IMAGEN A CLOUDINARY SI SE PROPORCIONA**
+    let fotoUrl: string | undefined;
     if (file) {
-      const folderPath = createFolderStructure(campeonatoId, categoriaId, nombreEquipo);
+      const folderPath = `campeonatos/${campeonatoId}/categorias/${categoriaId}/equipos/${nombreEquipo}`;
+      const cloudinaryResponse = await this.cloudinaryService.uploadImage(file, folderPath);
 
-      if (!folderPath) {
-        throw new Error('No se pudo crear la estructura de carpetas.');
+      if (!cloudinaryResponse.secure_url) {
+        throw new InternalServerErrorException('Error al obtener la URL de la imagen subida.');
       }
 
-      const fileName = generateFileName(dorsalNumber, apellidos);
-      if (!fileName) {
-        throw new Error('No se pudo generar el nombre del archivo.');
-      }
-
-      const absoluteFotoPath = path.join(folderPath, fileName);
-      fs.writeFileSync(absoluteFotoPath, file.buffer);
-
-      // Generar la ruta relativa solo desde "media"
-      fotoPath = path.relative(mediaBasePath, absoluteFotoPath).replace(/\\/g, '/'); // Asegura el formato UNIX
+      fotoUrl = cloudinaryResponse.secure_url;
     }
 
-    // Creación del jugador
+    // **📌 CREAR EL JUGADOR Y GUARDARLO EN LA BASE DE DATOS**
     const jugador = this.jugadorRepository.create({
       ...rest,
       cedula,
       dorsal: dorsalNumber,
       apellidos,
       equipo: { id: equipoId },
-      foto: fotoPath, // Guarda la ruta relativa desde "media"
+      foto: fotoUrl, // **URL de la imagen en Cloudinary**
     });
 
     return this.jugadorRepository.save(jugador);
@@ -151,29 +139,81 @@ export class JugadoresService {
     return await this.jugadorRepository.findOne({ where: { id }, relations: ['equipo'] });
   }
 
-  async update(id: number, updateJugadorDto: UpdateJugadoreDto) {
-    const jugador = await this.jugadorRepository.findOne({ where: { id } });
+  async update(id: number, updateJugadorDto: UpdateJugadoreDto, file?: Express.Multer.File): Promise<Jugador> {
+    const jugador = await this.jugadorRepository.findOne({
+      where: { id },
+      relations: ['equipo', 'equipo.categoria', 'equipo.categoria.campeonato'],
+    });
 
     if (!jugador) {
-      throw new NotFoundException(`Jugador con ID ${id} No encontrado`);
+      throw new NotFoundException(`Jugador con ID ${id} no encontrado`);
     }
+
+    // **📌 ASIGNAR LOS NUEVOS VALORES DEL DTO AL JUGADOR**
     Object.assign(jugador, updateJugadorDto);
-    // Si hay una categoría, podrías validar y asignarla
+
+    // **📌 VALIDAR SI SE ACTUALIZA EL EQUIPO**
     if (updateJugadorDto.equipo) {
-      const equipo = await this.equipoRepository.findOne({
-        where: { id: updateJugadorDto.equipo },
-      });
+      const equipo = await this.equipoRepository.findOne({ where: { id: updateJugadorDto.equipo } });
       if (!equipo) {
-        throw new NotFoundException(`Equipo con ID ${updateJugadorDto.equipo} No encontrado`);
+        throw new NotFoundException(`Equipo con ID ${updateJugadorDto.equipo} no encontrado`);
       }
       jugador.equipo = equipo;
     }
+
+    // **📌 GESTIONAR IMAGEN EN CLOUDINARY**
+    if (file) {
+      // **🗑️ ELIMINAR LA IMAGEN ANTERIOR SI EXISTE**
+      if (jugador.foto) {
+        const publicId = this.extractPublicId(jugador.foto);
+        await this.cloudinaryService.deleteImage(publicId);
+      }
+
+      // **📤 SUBIR LA NUEVA IMAGEN**
+      const campeonatoId = jugador.equipo.categoria.campeonato.id;
+      const categoriaId = jugador.equipo.categoria.id;
+      const nombreEquipo = jugador.equipo.nombre;
+
+      const folderPath = `campeonatos/${campeonatoId}/categorias/${categoriaId}/equipos/${nombreEquipo}`;
+
+      // 📌 **Obtener la URL segura de la imagen desde Cloudinary**
+      const uploadResponse = await this.cloudinaryService.uploadImage(file, folderPath);
+
+      if (uploadResponse && uploadResponse.secure_url) {
+        jugador.foto = uploadResponse.secure_url; // **Guardar solo la URL segura**
+      }
+    }
+
     return await this.jugadorRepository.save(jugador);
   }
 
-  async remove(id: number) {
-    return await this.jugadorRepository.delete(id);
+
+  // Método auxiliar para obtener el public_id de una imagen de Cloudinary
+  private extractPublicId(imageUrl: string): string {
+    const parts = imageUrl.split('/');
+    const filename = parts.pop()?.split('.')[0]; // Elimina la extensión
+    return `${parts.pop()}/${filename}`;
   }
+
+
+  async remove(id: number): Promise<void> {
+    // **🔍 Buscar al jugador antes de eliminarlo**
+    const jugador = await this.jugadorRepository.findOne({ where: { id } });
+
+    if (!jugador) {
+      throw new NotFoundException(`Jugador con ID ${id} no encontrado`);
+    }
+
+    // **🗑️ Eliminar la imagen en Cloudinary si existe**
+    if (jugador.foto) {
+      const publicId = this.extractPublicId(jugador.foto);
+      await this.cloudinaryService.deleteImage(publicId);
+    }
+
+    // **🗑️ Eliminar el jugador de la base de datos**
+    await this.jugadorRepository.delete(id);
+  }
+
 
   async filtrarJugadoresByEquipo(equipoId: number): Promise<Jugador[]> {
     return this.jugadorRepository.find({

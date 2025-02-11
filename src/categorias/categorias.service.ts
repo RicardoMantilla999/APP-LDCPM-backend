@@ -44,7 +44,7 @@ export class CategoriasService {
     // Verificar que la fase actual exista
     let faseActual = null;
     if (fase_actual) {
-      faseActual = await this.faseRepository.findOneBy({ id: fase_actual });
+      faseActual = await this.faseRepository.findOneBy({ orden: 0 });
       if (!faseActual) {
         throw new BadRequestException('La fase actual seleccionada no existe.');
       }
