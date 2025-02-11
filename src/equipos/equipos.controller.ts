@@ -12,6 +12,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
+import * as Express from 'express';
+
 
 @Controller('equipos')
 export class EquiposController {
