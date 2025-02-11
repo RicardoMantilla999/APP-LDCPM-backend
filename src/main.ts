@@ -9,12 +9,14 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
+  const allowedOrigins = process.env.ALLOWED_ORIGIN?.split(',') || '*';
+
   // Configura CORS
   app.enableCors({
-    origin: 'http://localhost:4200', // Permite solicitudes desde este origen
-    methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS', // Incluye OPTIONS para preflight
-    allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
-    credentials: true, // Permite credenciales (cookies, tokens)
+    origin: allowedOrigins, // Permite todos los orígenes en producción
+    methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   });
 
   app.setGlobalPrefix('api/');
@@ -27,6 +29,6 @@ async function bootstrap() {
     })
   );
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
