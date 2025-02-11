@@ -12,6 +12,8 @@ import { Tarjeta } from 'src/tarjetas/entities/tarjeta.entity';
 import { TipoTarjeta } from 'src/common/enums/tarjetas.enum';
 import { OrigenJugador } from 'src/common/enums/origen.enum';
 import { CloudinaryService, } from 'src/common/cloudinary/cloudinary.service';
+import * as Express from 'express';
+
 
 interface JugadorExcelRow {
   cedula: string;
