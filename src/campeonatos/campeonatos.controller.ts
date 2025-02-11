@@ -1,10 +1,9 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, BadRequestException, ParseIntPipe, InternalServerErrorException, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
-import { CampeonatosService } from './campeonatos.service';
-import { CreateCampeonatoDto } from './dto/create-campeonato.dto';
-import { UpdateCampeonatoDto } from './dto/update-campeonato.dto';
+import { CampeonatosService } from 'src/campeonatos/campeonatos.service';
+import { CreateCampeonatoDto } from 'src/campeonatos/dto/create-campeonato.dto';
+import { UpdateCampeonatoDto } from 'src/campeonatos/dto/update-campeonato.dto';
 import { Partido } from 'src/partidos/entities/partido.entity';
-import { Campeonato } from './entities/campeonato.entity';
-import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 
 @Controller('campeonatos')
 export class CampeonatosController {

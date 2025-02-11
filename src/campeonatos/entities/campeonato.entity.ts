@@ -2,7 +2,6 @@ import { Arbitro } from "src/arbitros/entities/arbitro.entity";
 import { Categoria } from "src/categorias/entities/categoria.entity";
 import { Dirigente } from "src/dirigentes/entities/dirigente.entity";
 import { Equipo } from "src/equipos/entities/equipo.entity";
-import { Fase } from "src/fases/entities/fase.entity";
 import { Gole } from "src/goles/entities/gole.entity";
 import { Column, DeleteDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 

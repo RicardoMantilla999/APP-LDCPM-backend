@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCampeonatoDto } from './dto/create-campeonato.dto';
-import { UpdateCampeonatoDto } from './dto/update-campeonato.dto';
+import { CreateCampeonatoDto } from 'src/campeonatos/dto/create-campeonato.dto';
+import { UpdateCampeonatoDto } from 'src/campeonatos/dto/update-campeonato.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Campeonato } from './entities/campeonato.entity';
+import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { In, Repository } from 'typeorm';
 import { Partido } from 'src/partidos/entities/partido.entity';
 import { Equipo } from 'src/equipos/entities/equipo.entity';

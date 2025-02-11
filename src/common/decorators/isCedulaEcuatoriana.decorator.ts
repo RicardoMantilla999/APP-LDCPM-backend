@@ -1,5 +1,5 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
-import { validarCedulaEcuatoriana } from '../validators/validaciones.validators';
+import { validarCedulaEcuatoriana } from 'src/common/validators/validaciones.validators';
 
 export function IsCedulaEcuatoriana(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {

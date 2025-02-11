@@ -2,10 +2,8 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { JwtService } from '@nestjs/jwt';
 import { UsuariosService } from 'src/usuarios/usuarios.service';
 import { RegistrarDto } from './dto/registrar.dto';
-import { LoginDto } from './dto/login.dto';
 import * as bcryptjs from 'bcryptjs';
 import { Rol } from 'src/common/enums/rol.enum';
-import { rootCertificates } from 'tls';
 
 @Injectable()
 export class AuthService {
