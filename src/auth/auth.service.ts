@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsuariosService } from 'src/usuarios/usuarios.service';
 import { RegistrarDto } from './dto/registrar.dto';
 import * as bcryptjs from 'bcryptjs';
-import { Rol } from 'src/common/enums/rol.enum';
+import { Rol } from '../common/enums/rol.enum';
 
 @Injectable()
 export class AuthService {
