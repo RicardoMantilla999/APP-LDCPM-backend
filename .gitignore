@@ -3,8 +3,7 @@
 /node_modules
 /build
 postgres_data
-.env.dev
-.env.prod
+.env
 
 
 # Logs

@@ -25,40 +25,18 @@ import { MulterModule } from '@nestjs/platform-express';
   imports: [
     CloudinaryModule,
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
       isGlobal: true,
     }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => {
-        if (process.env.NODE_ENV === 'production') {
-          // Solo en producción, utilizamos la URL completa
-          return {
-            type: 'postgres',
-            url: process.env.DATABASE_URL, // Usamos la URL de conexión para producción
-            autoLoadEntities: true,
-            synchronize: false, // En producción no usar synchronize
-            ssl: process.env.DATABASE_SSL === 'true',
-            extra: {
-              ssl: process.env.DATABASE_SSL === 'true'
-                ? {
-                  rejectUnauthorized: false,
-                }
-                : null
-            }
-          };
-        }
-        // En desarrollo, usamos los parámetros individuales
-        return {
-          type: 'postgres',
-          host: process.env.DATABASE_HOST,
-          port: parseInt(process.env.DATABASE_PORT, 10),
-          username: process.env.DATABASE_USER,
-          password: process.env.DATABASE_PASSWORD,
-          database: process.env.DATABASE_NAME,
-          autoLoadEntities: true,
-          synchronize: true, // Solo en desarrollo usamos synchronize
-        };
-      },
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DATABASE_HOST,
+      port: parseInt(process.env.DATABASE_PORT),
+      username: process.env.DATABASE_USER,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE_NAME,
+      autoLoadEntities: true,
+      synchronize: true, // Solo en desarrollo usamos synchronize
+
     }),
     UsuariosModule,
     AuthModule,
