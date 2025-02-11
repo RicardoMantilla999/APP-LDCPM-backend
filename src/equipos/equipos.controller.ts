@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, BadRequestException, NotFoundException, UseGuards, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, BadRequestException, NotFoundException, UseGuards, InternalServerErrorException, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
 import { EquiposService } from './equipos.service';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
@@ -11,7 +11,7 @@ import { Categoria } from 'src/categorias/entities/categoria.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
-import { SupabaseService } from 'src/common/cloudinary/cloudinary.service';
+import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 
 @Controller('equipos')
 export class EquiposController {
@@ -20,33 +20,49 @@ export class EquiposController {
     private readonly campeonatoRepository: Repository<Campeonato>,
     @InjectRepository(Categoria)
     private readonly categoriaRepository: Repository<Categoria>,
-    private cloudinaryService: SupabaseService,
+    private cloudinaryService: CloudinaryService,
   ) { }
 
-  @Post()
+  @Post('upload')
   @UseInterceptors(FileInterceptor('logo'))
   async create(
     @Body() createEquipoDto: CreateEquipoDto,
-    @UploadedFile() logo: Express.Multer.File
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1024 * 1024 }), // 1 MB
+          new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }), // Tipos MIME correctos
+        ],
+      }),
+    ) file: Express.Multer.File,
   ) {
     try {
-      console.log('📥 Archivo recibido en el backend:', logo);
+      console.log('📥 Archivo recibido en el backend:', file);
 
-      if (!logo) {
-        throw new Error('No se recibió ninguna imagen.');
+      if (!file) {
+        throw new BadRequestException('No se recibió ninguna imagen.');
       }
 
-      const folderPath = `media/campeonatos/${createEquipoDto.campeonato}/categorias/${createEquipoDto.categoria}/equipos`;
-      const logoUrl = await this.cloudinaryService.uploadImage(logo, folderPath);
+      // Definir la carpeta en Cloudinary
+      const folderPath = `campeonatos/${createEquipoDto.campeonato}/categorias/${createEquipoDto.categoria}/equipos`;
 
-      console.log(`✅ Imagen subida con éxito a Cloudinary: ${logoUrl}`);
+      // Subir imagen a Cloudinary
+      const cloudinaryResponse = await this.cloudinaryService.uploadImage(file, folderPath);
 
-      return this.equiposService.create(createEquipoDto, logoUrl);
+      if (!cloudinaryResponse.secure_url) {
+        throw new InternalServerErrorException('No se pudo obtener la URL de la imagen subida.');
+      }
+
+      console.log(`✅ Imagen subida con éxito a Cloudinary: ${cloudinaryResponse.secure_url}`);
+
+      // Crear el equipo con la URL del logo
+      return this.equiposService.create(createEquipoDto, cloudinaryResponse.secure_url);
     } catch (error) {
       console.error('⛔ Error al subir la imagen:', error);
-      throw new Error('Error al crear el equipo: ' + error.message);
+      throw new InternalServerErrorException('Error al crear el equipo: ' + error.message);
     }
   }
+
 
 
 
@@ -91,46 +107,61 @@ export class EquiposController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('logo', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const { campeonato, categoria, nombre } = req.body;
-        const uploadPath = `./media/${campeonato}/${categoria}/${nombre}/logo`;
-        fs.mkdirSync(uploadPath, { recursive: true });
-        cb(null, uploadPath);
-      },
-      filename: (req, file, cb) => {
-        const fileExt = extname(file.originalname);
-        cb(null, `logo${fileExt}`);
-      },
-    }),
-    fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-        return cb(new Error('Solo se permiten imágenes JPG y PNG'), false);
+  @UseInterceptors(FileInterceptor('logo'))
+  async update(
+    @Param('id') id: number,
+    @Body() updateEquipoDto: UpdateEquipoDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1024 * 1024 }), // 1 MB
+          new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }),
+        ],
+      }),
+    ) file: Express.Multer.File,
+  ) {
+    try {
+      // Buscar el equipo por ID
+      const equipo = await this.equiposService.findOne(id);
+      if (!equipo) {
+        throw new NotFoundException(`Equipo con ID ${id} no encontrado`);
       }
-      cb(null, true);
-    },
-  }))
-  async update(@Param('id') id: number, @Body() updateEquipoDto: UpdateEquipoDto, @UploadedFile() logo: Express.Multer.File) {
-    const equipo = await this.equiposService.findOne(id);
-    if (!equipo) {
-      throw new NotFoundException(`Equipo con ID ${id} no encontrado`);
+
+      // Si el equipo ya tiene un logo en Cloudinary, eliminarlo
+      if (equipo.logo) {
+        const publicId = this.cloudinaryService.extractPublicId(equipo.logo); // Extrae el ID de Cloudinary
+        await this.cloudinaryService.deleteImage(publicId);
+        console.log(`🗑️ Imagen anterior eliminada de Cloudinary: ${publicId}`);
+      }
+
+      let nuevaRutaLogo = equipo.logo; // Mantiene la imagen actual si no se sube una nueva
+
+      // Si hay un nuevo archivo, subirlo a Cloudinary
+      if (file) {
+        const folderPath = `campeonatos/${updateEquipoDto.campeonato}/categorias/${updateEquipoDto.categoria}/equipos`;
+        const cloudinaryResponse = await this.cloudinaryService.uploadImage(file, folderPath);
+
+        if (!cloudinaryResponse.secure_url) {
+          throw new InternalServerErrorException('No se pudo obtener la URL de la nueva imagen subida.');
+        }
+
+        console.log(`✅ Nueva imagen subida con éxito: ${cloudinaryResponse.secure_url}`);
+        nuevaRutaLogo = cloudinaryResponse.secure_url; // Asignar la nueva URL del logo
+      }
+
+      // Actualizar el equipo con la nueva información
+      return this.equiposService.update(id, { ...updateEquipoDto, logo: nuevaRutaLogo });
+
+    } catch (error) {
+      console.error('⛔ Error al actualizar el equipo:', error);
+      throw new InternalServerErrorException('Error al actualizar el equipo: ' + error.message);
     }
-
-    const campeonato = await this.equiposService.getCampeonatoById(updateEquipoDto.campeonato);
-    const categoria = await this.equiposService.getCategoriaById(updateEquipoDto.categoria);
-
-    let rutaLogo = equipo.logo;
-    if (logo) {
-      rutaLogo = `${campeonato.id}/${categoria.id}/${updateEquipoDto.nombre}/logo/${logo.filename}`;
-    }
-
-    return this.equiposService.update(id, { ...updateEquipoDto, logo: rutaLogo });
   }
 
 
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.equiposService.remove(+id);
   }
 }

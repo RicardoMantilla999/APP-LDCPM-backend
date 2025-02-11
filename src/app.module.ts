@@ -18,11 +18,12 @@ import { TarjetasModule } from './tarjetas/tarjetas.module';
 import { PosicionesModule } from './posiciones/posiciones.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CloudinaryModule } from './common/cloudinary/cloudinary.module';
-import { SupabaseService } from './common/cloudinary/cloudinary.service';
+import { CloudinaryService } from './common/cloudinary/cloudinary.service';
 import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
+    CloudinaryModule,
     ConfigModule.forRoot({
       envFilePath: process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
       isGlobal: true,
@@ -65,12 +66,11 @@ import { MulterModule } from '@nestjs/platform-express';
     GolesModule,
     TarjetasModule,
     PosicionesModule,
-    CloudinaryModule,
     MulterModule.register({
       limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB por archivo
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, SupabaseService],
+  providers: [AppService, CloudinaryService],
 })
 export class AppModule{}

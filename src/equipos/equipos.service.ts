@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,7 +9,7 @@ import { Dirigente } from 'src/dirigentes/entities/dirigente.entity';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Posicione } from 'src/posiciones/entities/posicione.entity';
 import { Fase } from 'src/fases/entities/fase.entity';
-import { SupabaseService } from 'src/common/cloudinary/cloudinary.service';
+import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 
 @Injectable()
 export class EquiposService {
@@ -30,7 +30,7 @@ export class EquiposService {
     private readonly posicionesRepository: Repository<Posicione>,
     @InjectRepository(Fase)
     private readonly faseRepository: Repository<Fase>,
-     private readonly supabaseService: SupabaseService,
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
   async create(createEquipoDto: CreateEquipoDto, logoUrl: string) {
@@ -39,31 +39,31 @@ export class EquiposService {
     if (!categoria) {
       throw new NotFoundException('Categoría no encontrada');
     }
-  
+
     // 🔹 Verificar si el dirigente existe
     const dirigente = await this.dirigenteRepository.findOne({ where: { id: createEquipoDto.dirigente } });
     if (!dirigente) {
       throw new NotFoundException('Dirigente no encontrado');
     }
-  
+
     // 🔹 Verificar si el campeonato existe
     const campeonato = await this.campeonatoRepository.findOne({ where: { id: createEquipoDto.campeonato } });
     if (!campeonato) {
       throw new NotFoundException('Campeonato no encontrado');
     }
-  
+
     // 🔹 Verificar la fase actual
     const faseActual = await this.faseRepository.findOneBy({ orden: 0 });
     if (!faseActual) {
       throw new NotFoundException('Fase actual no encontrada');
     }
-  
+
     // 🔹 Buscar la siguiente fase
     const siguienteFase = await this.faseRepository.findOne({ where: { orden: faseActual.orden + 1 } });
     if (!siguienteFase) {
       throw new Error('No se encontró la siguiente fase.');
     }
-  
+
     // 🔹 Verificar si ya existe un equipo con el mismo nombre en la categoría y campeonato
     const equipoExistente = await this.equipoRepository.findOne({
       where: {
@@ -73,11 +73,11 @@ export class EquiposService {
       },
       relations: ['categoria', 'campeonato'],
     });
-  
+
     if (equipoExistente) {
       throw new BadRequestException(`El equipo ${createEquipoDto.nombre} ya existe en la categoría ${categoria.categoria}.`);
     }
-  
+
     // ✅ **Crear y guardar el nuevo equipo**
     const equipo = this.equipoRepository.create({
       ...createEquipoDto,
@@ -87,9 +87,9 @@ export class EquiposService {
       fase_actual: { id: faseActual.id },
       logo: logoUrl, // ✅ Guardamos la URL del logo (viene desde el Controller)
     });
-  
+
     const nuevoEquipo = await this.equipoRepository.save(equipo);
-  
+
     // ✅ **Crear el registro en la tabla de posiciones**
     const nuevaPosicion = this.posicionesRepository.create({
       equipo: nuevoEquipo,
@@ -100,14 +100,14 @@ export class EquiposService {
       categoria: categoria,
       fase: siguienteFase
     });
-  
+
     await this.posicionesRepository.save(nuevaPosicion);
-  
+
     return nuevoEquipo;
   }
-  
-  
-  
+
+
+
 
 
 
@@ -163,6 +163,7 @@ export class EquiposService {
     });
   }
 
+
   async update(id: number, updateEquipoDto: UpdateEquipoDto, file?: Express.Multer.File): Promise<Equipo> {
     const equipo = await this.equipoRepository.findOne({ where: { id } });
   
@@ -170,46 +171,26 @@ export class EquiposService {
       throw new NotFoundException(`Equipo con ID ${id} no encontrado`);
     }
   
+    // **📌 ELIMINAR LOGO ANTERIOR SI EXISTE Y SE RECIBE UNO NUEVO**
+    if (file && equipo.logo) {
+      const publicId = this.cloudinaryService.extractPublicId(equipo.logo); // Extraer el public_id
+      await this.cloudinaryService.deleteImage(publicId);
+      console.log(`🗑️ Imagen anterior eliminada de Cloudinary: ${publicId}`);
+    }
+  
     // **📌 SUBIR NUEVO LOGO SI SE PROPORCIONA**
     if (file) {
-      // **📌 ELIMINAR LOGO ANTERIOR EN CLOUDINARY SI EXISTE**
-      if (equipo.logo) {
-        //await this.supabaseService.deleteImage(equipo.logo);
-      }
-  
       const folderPath = `campeonatos/${equipo.campeonato.id}/categorias/${equipo.categoria.id}/equipos`;
-      equipo.logo = await this.supabaseService.uploadImage(file, folderPath);
+      const cloudinaryResponse = await this.cloudinaryService.uploadImage(file, folderPath);
+  
+      if (!cloudinaryResponse.secure_url) {
+        throw new InternalServerErrorException('No se pudo obtener la URL de la imagen subida.');
+      }
+      equipo.logo = cloudinaryResponse.secure_url;
     }
   
-    // **Actualizar las propiedades básicas**
+    // **Actualizar las propiedades del equipo**
     Object.assign(equipo, updateEquipoDto);
-  
-    // **Si hay una categoría, verificar y asignarla**
-    if (updateEquipoDto.categoria) {
-      const categoria = await this.categoriaRepository.findOne({ where: { id: updateEquipoDto.categoria } });
-      if (!categoria) {
-        throw new NotFoundException(`Categoría con ID ${updateEquipoDto.categoria} no encontrada`);
-      }
-      equipo.categoria = categoria;
-    }
-  
-    // **Si hay un dirigente, verificar y asignarlo**
-    if (updateEquipoDto.dirigente) {
-      const dirigente = await this.dirigenteRepository.findOne({ where: { id: updateEquipoDto.dirigente } });
-      if (!dirigente) {
-        throw new NotFoundException(`Dirigente con ID ${updateEquipoDto.dirigente} no encontrado`);
-      }
-      equipo.dirigente = dirigente;
-    }
-  
-    // **Si hay un campeonato, verificar y asignarlo**
-    if (updateEquipoDto.campeonato) {
-      const campeonato = await this.campeonatoRepository.findOne({ where: { id: updateEquipoDto.campeonato } });
-      if (!campeonato) {
-        throw new NotFoundException(`Campeonato con ID ${updateEquipoDto.campeonato} no encontrado`);
-      }
-      equipo.campeonato = campeonato;
-    }
   
     return await this.equipoRepository.save(equipo);
   }
@@ -218,14 +199,29 @@ export class EquiposService {
 
 
 
-  async remove(id: number) {
-    // Primero, elimina las posiciones relacionadas con el equipo
+
+
+  async remove(id: number): Promise<void> {
+    // **📌 OBTENER EL EQUIPO**
+    const equipo = await this.equipoRepository.findOne({ where: { id } });
+
+    if (!equipo) {
+      throw new NotFoundException(`Equipo con ID ${id} no encontrado`);
+    }
+
+    // **📌 ELIMINAR LOGO EN CLOUDINARY SI EXISTE**
+    if (equipo.logo) {
+      const publicId = this.cloudinaryService.extractPublicId(equipo.logo); // Extraer el public_id
+      await this.cloudinaryService.deleteImage(publicId);
+      console.log(`🗑️ Imagen eliminada de Cloudinary: ${publicId}`);
+    }
+
+    // **📌 ELIMINAR POSICIONES RELACIONADAS**
     await this.posicionesRepository.delete({ equipo: { id } });
 
-    // Luego, elimina el equipo
-    return await this.equipoRepository.delete({ id });
+    // **📌 ELIMINAR EQUIPO**
+    await this.equipoRepository.delete({ id });
   }
-
 
 
   async contarEquipos(campeonatoId: number) {

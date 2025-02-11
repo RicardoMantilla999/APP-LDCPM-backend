@@ -9,9 +9,10 @@ import { Partido } from 'src/partidos/entities/partido.entity';
 import { Posicione } from 'src/posiciones/entities/posicione.entity';
 import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Fase } from 'src/fases/entities/fase.entity';
+import { CloudinaryModule } from 'src/common/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Campeonato, Posicione, Fase])],
+  imports: [TypeOrmModule.forFeature([Equipo, Dirigente, Categoria, Campeonato, Posicione, Fase]), CloudinaryModule],
   controllers: [EquiposController],
   providers: [EquiposService],
 })
