@@ -37,6 +37,14 @@ import { MulterModule } from '@nestjs/platform-express';
             url: process.env.DATABASE_URL, // Usamos la URL de conexión para producción
             autoLoadEntities: true,
             synchronize: false, // En producción no usar synchronize
+            ssl: process.env.DATABASE_SSL === 'true',
+            extra: {
+              ssl: process.env.DATABASE_SSL === 'true'
+                ? {
+                  rejectUnauthorized: false,
+                }
+                : null
+            }
           };
         }
         // En desarrollo, usamos los parámetros individuales
@@ -73,4 +81,4 @@ import { MulterModule } from '@nestjs/platform-express';
   controllers: [AppController],
   providers: [AppService, CloudinaryService],
 })
-export class AppModule{}
+export class AppModule { }
