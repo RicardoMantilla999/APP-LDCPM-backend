@@ -3,7 +3,6 @@ import { JugadoresService } from './jugadores.service';
 import { CreateJugadoreDto } from './dto/create-jugadore.dto';
 import { UpdateJugadoreDto } from './dto/update-jugadore.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import * as Express from 'express';
 
 
 @Controller('jugadores')

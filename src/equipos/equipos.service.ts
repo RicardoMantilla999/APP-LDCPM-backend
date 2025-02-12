@@ -10,7 +10,6 @@ import { Campeonato } from 'src/campeonatos/entities/campeonato.entity';
 import { Posicione } from 'src/posiciones/entities/posicione.entity';
 import { Fase } from 'src/fases/entities/fase.entity';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
-import * as Express from 'express';
 
 
 @Injectable()
