@@ -32,7 +32,7 @@ import { MulterModule } from '@nestjs/platform-express';
       host: process.env.DATABASE_HOST || 'localhost',
       port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
       username: process.env.DATABASE_USER || 'ldcpm',
-      password: process.env.DATABASE_PASSWORD || '1234',
+      password: String(process.env.DATABASE_PASSWORD) || '1234',
       database: process.env.DATABASE_NAME || 'LDCPM',
       ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false, // Configura SSL correctamente
       autoLoadEntities: true,
