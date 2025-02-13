@@ -30,7 +30,7 @@ import { MulterModule } from '@nestjs/platform-express';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
+      port: parseInt(process.env.DATABASE_PORT, 10) || 5431,
       username: process.env.DATABASE_USER || 'ldcpm',
       password: String(process.env.DATABASE_PASSWORD) || '1234',
       database: process.env.DATABASE_NAME || 'LDCPM',
