@@ -18,23 +18,24 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
 
     @IsOptional()
     @IsString()
-    @MinLength(5, {message:'Ingrese dos Nombres'})
-    @Transform(({ value }) => value?.toUpperCase()) 
+    @MinLength(5, { message: 'Ingrese dos Nombres' })
+    @Transform(({ value }) => value?.toUpperCase())
     nombres?: string;
 
     @IsOptional()
     @IsString()
-    @MinLength(5, {message:'Ingrese dos Apellidos'})
-    @Transform(({ value }) => value?.toUpperCase()) 
+    @MinLength(5, { message: 'Ingrese dos Apellidos' })
+    @Transform(({ value }) => value?.toUpperCase())
     apellidos?: string;
 
     @IsOptional()
-    @IsNumber()
-    dorsal?: number;
+    @IsNumber({}, { message: 'El dorsal debe ser un número' })
+    @Type(() => Number) // Asegura que el valor se transforme a número
+    dorsal?: number | null;
 
     @IsOptional()
     @IsDate()
-    @Type(() => Date) 
+    @Type(() => Date)
     fecha_nacimiento?: Date;
 
 
@@ -64,7 +65,7 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
     @IsEnum(OrigenJugador)
     origen?: OrigenJugador;
 
- 
+
     @IsOptional()
     equipo?: number;
 
