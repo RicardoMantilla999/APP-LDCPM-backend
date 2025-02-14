@@ -29,9 +29,7 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
     apellidos?: string;
 
     @IsOptional()
-    @IsNumber({}, { message: 'El dorsal debe ser un número' })
-    @Type(() => Number) // Asegura que el valor se transforme a número
-    dorsal?: number | null;
+    dorsal?: number;
 
     @IsOptional()
     @IsDate()
