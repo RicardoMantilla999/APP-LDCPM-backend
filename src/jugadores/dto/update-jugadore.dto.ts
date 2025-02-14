@@ -29,7 +29,7 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
     apellidos?: string;
 
     @IsOptional()
-    dorsal?: number;
+    dorsal?: number | null;
 
     @IsOptional()
     @IsDate()
