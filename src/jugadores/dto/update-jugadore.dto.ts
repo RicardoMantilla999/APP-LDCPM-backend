@@ -29,7 +29,6 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
     apellidos?: string;
 
     @IsOptional()
-    @IsInt()
     @ValidateIf((obj) => obj.dorsal !== null) // Solo valida si no es null
     dorsal?: number | null;
 
