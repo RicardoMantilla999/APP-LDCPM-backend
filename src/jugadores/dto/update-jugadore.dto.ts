@@ -29,6 +29,7 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
     apellidos?: string;
 
     @IsOptional()
+    @IsNumber({},{message: 'Dorsal debe ser un número'})
     dorsal?: number | null;
 
     @IsOptional()
