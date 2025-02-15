@@ -11,10 +11,12 @@ export class CreateCampeonatoDto {
 
 
     @IsNotEmpty({message: 'La Fecha es obligatorio'})
+    @IsDate()
     @Type(() => Date)
     fecha_inicio: Date;
 
     @IsNotEmpty({message: 'La Fecha es obligatorio'})
+    @IsDate()
     @Type(() => Date)
     fecha_fin: Date;
 

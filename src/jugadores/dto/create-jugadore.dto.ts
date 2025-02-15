@@ -30,6 +30,7 @@ export class CreateJugadoreDto {
     dorsal?: number;
 
     @IsNotEmpty({message:'Elija La Fecha de Nacimiento'})
+    @IsDate()
     @Type(() => Date) 
     fecha_nacimiento: Date;
 
