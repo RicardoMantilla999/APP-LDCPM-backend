@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateJugadoreDto } from './create-jugadore.dto';
-import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength, ValidateIf } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { OrigenJugador } from 'src/common/enums/origen.enum';
 
@@ -29,8 +29,10 @@ export class UpdateJugadoreDto extends PartialType(CreateJugadoreDto) {
     apellidos?: string;
 
     @IsOptional()
-    @IsNumber({},{message: 'Dorsal debe ser un número'})
+    @IsInt()
+    @ValidateIf((obj) => obj.dorsal !== null) // Solo valida si no es null
     dorsal?: number | null;
+
 
     @IsOptional()
     @IsDate()

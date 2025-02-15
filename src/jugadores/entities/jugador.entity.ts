@@ -20,7 +20,7 @@ export class Jugador {
     apellidos: string;
 
     @Column({ nullable: true })
-    dorsal: number;
+    dorsal: number | null;
 
     @Column({ type: 'date', nullable: true })
     fecha_nacimiento: Date;

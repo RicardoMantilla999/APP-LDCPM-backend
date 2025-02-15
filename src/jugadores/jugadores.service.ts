@@ -152,9 +152,9 @@ export class JugadoresService {
     }
 
     // **📌 ASIGNAR LOS NUEVOS VALORES DEL DTO AL JUGADOR**
-    if (updateJugadorDto.dorsal !== undefined && updateJugadorDto.dorsal !== null) {
-      jugador.dorsal = updateJugadorDto.dorsal;
-    }
+    if ('dorsal' in updateJugadorDto) { // Permite asignar null
+      jugador.dorsal = updateJugadorDto.dorsal ?? null;
+    }    
 
     // **📌 VALIDAR SI SE ACTUALIZA EL EQUIPO**
     if (updateJugadorDto.equipo) {
