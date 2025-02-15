@@ -440,13 +440,25 @@ export class JugadoresService {
         // Si el jugador ya existe, agregarlo a la lista de ignorados
         ignorados.push(row.cedula);
       } else {
+        let fechaNacimiento: Date | null = null;
+
+        // Convertir fecha si viene en formato numérico (Excel date format)
+        if (row.fecha_nacimiento && !isNaN(Number(row.fecha_nacimiento))) {
+          const parsedDate = XLSX.SSF.parse_date_code(Number(row.fecha_nacimiento));
+          if (parsedDate) {
+            fechaNacimiento = new Date(parsedDate.y, parsedDate.m - 1, parsedDate.d);
+          }
+        } else if (typeof row.fecha_nacimiento === 'string') {
+          fechaNacimiento = new Date(row.fecha_nacimiento);
+        }
+  
         // Si no existe, crearlo
         jugadores.push(
           this.jugadorRepository.create({
             cedula: row.cedula,
             nombres: String(row.nombres).toUpperCase(),
             apellidos: String(row.apellidos).toUpperCase(),
-            fecha_nacimiento: row.fecha_nacimiento ? new Date(row.fecha_nacimiento) : null,
+            fecha_nacimiento: fechaNacimiento,
             canton_juega: row.canton_juega ? String(row.canton_juega).toUpperCase() : null,
             direccion: row.direccion ? String(row.direccion).toUpperCase() : null,
             telefono: row.telefono,
