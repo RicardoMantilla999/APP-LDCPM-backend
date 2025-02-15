@@ -26,7 +26,6 @@ export class CreateJugadoreDto {
 
     @IsOptional()
     @Transform(({ value }) => parseInt(value, 10))
-    @IsNumber({},{message: 'Dorsal debe ser un numero'})
     dorsal?: number;
 
     @IsNotEmpty({message:'Elija La Fecha de Nacimiento'})
