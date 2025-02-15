@@ -146,16 +146,16 @@ export class JugadoresService {
       where: { id },
       relations: ['equipo', 'equipo.categoria', 'equipo.categoria.campeonato'],
     });
-
+  
     if (!jugador) {
       throw new NotFoundException(`Jugador con ID ${id} no encontrado`);
     }
-
-    // **📌 ASIGNAR LOS NUEVOS VALORES DEL DTO AL JUGADOR**
-    if ('dorsal' in updateJugadorDto) { // Permite asignar null
+  
+    // **📌 ASIGNAR NUEVOS VALORES DEL DTO**
+    if ('dorsal' in updateJugadorDto) {
       jugador.dorsal = updateJugadorDto.dorsal ?? null;
-    }    
-
+    }
+  
     // **📌 VALIDAR SI SE ACTUALIZA EL EQUIPO**
     if (updateJugadorDto.equipo) {
       const equipo = await this.equipoRepository.findOne({ where: { id: updateJugadorDto.equipo } });
@@ -164,32 +164,34 @@ export class JugadoresService {
       }
       jugador.equipo = equipo;
     }
-
-    // **📌 GESTIONAR IMAGEN EN CLOUDINARY**
+  
+    // **📌 GESTIONAR IMAGEN**
     if (file) {
-      // **🗑️ ELIMINAR LA IMAGEN ANTERIOR SI EXISTE**
+      // **🗑️ ELIMINAR LA FOTO ANTERIOR SI EXISTE**
       if (jugador.foto) {
         const publicId = this.extractPublicId(jugador.foto);
         await this.cloudinaryService.deleteImage(publicId);
       }
-
+  
       // **📤 SUBIR LA NUEVA IMAGEN**
       const campeonatoId = jugador.equipo.categoria.campeonato.id;
       const categoriaId = jugador.equipo.categoria.id;
       const nombreEquipo = jugador.equipo.nombre;
-
+  
       const folderPath = `campeonatos/${campeonatoId}/categorias/${categoriaId}/equipos/${nombreEquipo}`;
-
+  
       // 📌 **Obtener la URL segura de la imagen desde Cloudinary**
       const uploadResponse = await this.cloudinaryService.uploadImage(file, folderPath);
-
-      if (uploadResponse && uploadResponse.secure_url) {
-        jugador.foto = uploadResponse.secure_url; // **Guardar solo la URL segura**
+  
+      if (uploadResponse?.secure_url) {
+        jugador.foto = uploadResponse.secure_url;
       }
     }
-
+  
+    // **📌 GUARDAR CAMBIOS**
     return await this.jugadorRepository.save(jugador);
   }
+  
 
 
   // Método auxiliar para obtener el public_id de una imagen de Cloudinary
@@ -466,6 +468,7 @@ export class JugadoresService {
             origen: OrigenJugador.Nacional,
             equipo,
             foto: row.foto || null,
+            dorsal: 0
           })
         );
       }
