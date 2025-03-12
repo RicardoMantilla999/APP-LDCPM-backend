@@ -35,7 +35,7 @@ export class PosicionesController {
     return this.posicionesService.remove(+id);
   }
 
-  
+
 
 
   // Endpoint para obtener posiciones filtradas por categoría y fase
@@ -67,11 +67,26 @@ export class PosicionesController {
 
   @Get(':categoriaId/:faseId')
   async obtenerTablaPosiciones(
-      @Param('categoriaId') categoriaId: number,
-      @Param('faseId') faseId: number,
+    @Param('categoriaId') categoriaId: number,
+    @Param('faseId') faseId: number,
   ) {
-      return this.posicionesService.obtenerPosiciones(categoriaId, faseId);
+    return this.posicionesService.obtenerPosiciones(categoriaId, faseId);
   }
-  
+
+  @Get(':categoria/:fase/posicionesA')
+  async obtenerPosicionesA(
+    @Param('categoria') categoria: number,
+    @Param('fase') fase: number,
+  ) {
+    return this.posicionesService.tablaPosicionesGrupoA(categoria, fase);
+  }
+
+  @Get(':categoria/:fase/posicionesB')
+  async obtenerPosicionesB(
+    @Param('categoria') categoria: number,
+    @Param('fase') fase: number,
+  ) {
+    return this.posicionesService.tablaPosicionesGrupoB(categoria, fase);
+  }
 
 }

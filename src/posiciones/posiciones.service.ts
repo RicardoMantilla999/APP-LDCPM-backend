@@ -111,6 +111,28 @@ export class PosicionesService {
     });
   }
 
+  async tablaPosicionesGrupoA(categoriaId: number, faseId: number): Promise<Posicione[]> {
+    return this.posicionRepository.find({
+      where: {
+        equipo: { grupo: {nombre: 'A'} },
+        categoria: { id: categoriaId },
+        fase: { id: faseId },
+      },
+      relations: ['equipo', 'categoria', 'fase'],
+      order: { puntos: 'DESC', diferenciaGoles: 'DESC' },
+    });
+  }
 
+  async tablaPosicionesGrupoB(categoriaId: number, faseId: number): Promise<Posicione[]> {
+    return this.posicionRepository.find({
+      where: {
+        equipo: { grupo: {nombre: 'B'} },
+        categoria: { id: categoriaId },
+        fase: { id: faseId },
+      },
+      relations: ['equipo', 'categoria', 'fase'],
+      order: { puntos: 'DESC', diferenciaGoles: 'DESC' },
+    });
+  }
 
 }
