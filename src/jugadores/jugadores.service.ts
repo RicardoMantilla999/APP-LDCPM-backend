@@ -146,16 +146,16 @@ export class JugadoresService {
       where: { id },
       relations: ['equipo', 'equipo.categoria', 'equipo.categoria.campeonato'],
     });
-  
+
     if (!jugador) {
       throw new NotFoundException(`Jugador con ID ${id} no encontrado`);
     }
-  
+
     // **📌 ASIGNAR NUEVOS VALORES DEL DTO**
     if ('dorsal' in updateJugadorDto) {
       jugador.dorsal = updateJugadorDto.dorsal ?? null;
     }
-  
+
     // **📌 VALIDAR SI SE ACTUALIZA EL EQUIPO**
     if (updateJugadorDto.equipo) {
       const equipo = await this.equipoRepository.findOne({ where: { id: updateJugadorDto.equipo } });
@@ -164,7 +164,7 @@ export class JugadoresService {
       }
       jugador.equipo = equipo;
     }
-  
+
     // **📌 GESTIONAR IMAGEN**
     if (file) {
       // **🗑️ ELIMINAR LA FOTO ANTERIOR SI EXISTE**
@@ -172,26 +172,26 @@ export class JugadoresService {
         const publicId = this.extractPublicId(jugador.foto);
         await this.cloudinaryService.deleteImage(publicId);
       }
-  
+
       // **📤 SUBIR LA NUEVA IMAGEN**
       const campeonatoId = jugador.equipo.categoria.campeonato.id;
       const categoriaId = jugador.equipo.categoria.id;
       const nombreEquipo = jugador.equipo.nombre;
-  
+
       const folderPath = `campeonatos/${campeonatoId}/categorias/${categoriaId}/equipos/${nombreEquipo}`;
-  
+
       // 📌 **Obtener la URL segura de la imagen desde Cloudinary**
       const uploadResponse = await this.cloudinaryService.uploadImage(file, folderPath);
-  
+
       if (uploadResponse?.secure_url) {
         jugador.foto = uploadResponse.secure_url;
       }
     }
-  
+
     // **📌 GUARDAR CAMBIOS**
     return await this.jugadorRepository.save(jugador);
   }
-  
+
 
 
   // Método auxiliar para obtener el public_id de una imagen de Cloudinary
@@ -401,30 +401,30 @@ export class JugadoresService {
 
     // Definir las columnas requeridas
     const columnasRequeridas = ['cedula', 'nombres', 'apellidos', 'fecha_nacimiento', 'canton_juega', 'direccion', 'telefono', 'email'];
-    
+
     // Verificar si todas las columnas requeridas están presentes
-    const columnasFaltantes = columnasRequeridas.filter(col => !(col in data[0])); 
+    const columnasFaltantes = columnasRequeridas.filter(col => !(col in data[0]));
     if (columnasFaltantes.length > 0) {
-        throw new Error(`El archivo no contiene las siguientes columnas obligatorias: ${columnasFaltantes.join(', ')}`);
+      throw new Error(`El archivo no contiene las siguientes columnas obligatorias: ${columnasFaltantes.join(', ')}`);
     }
 
     // Filtrar filas vacías o mal formateadas
     const filasValidas = data.filter((row, index) => {
-        const tieneCedula = row.cedula && String(row.cedula).trim() !== '';
-        if (!tieneCedula) {
-            console.warn(`⚠️ Fila ${index + 2} ignorada: No tiene cédula.`);
-        }
-        return tieneCedula;
+      const tieneCedula = row.cedula && String(row.cedula).trim() !== '';
+      if (!tieneCedula) {
+        console.warn(`⚠️ Fila ${index + 2} ignorada: No tiene cédula.`);
+      }
+      return tieneCedula;
     });
 
     if (filasValidas.length === 0) {
-        throw new Error("No hay datos válidos para importar.");
+      throw new Error("No hay datos válidos para importar.");
     }
 
     // Verificar si el equipo existe
     const equipo = await this.equipoRepository.findOne({ where: { id: equipoId }, relations: ['categoria', 'campeonato'] });
     if (!equipo) {
-        throw new Error(`Equipo no encontrado: ID ${equipoId}`);
+      throw new Error(`Equipo no encontrado: ID ${equipoId}`);
     }
 
     const categoriaId = equipo.categoria.id; // Obtener categoría del equipo
@@ -435,68 +435,66 @@ export class JugadoresService {
     // Validar y filtrar jugadores que ya existen
     const jugadores = [];
     for (const [index, row] of filasValidas.entries()) {
-        const existeJugador = await this.jugadorRepository.findOne({
-            where: {
-                cedula: row.cedula,
-                equipo: {
-                    id: equipoId,
-                    categoria: { id: categoriaId },
-                    campeonato: { id: campeonatoId },
-                },
-            },
-            relations: ['equipo', 'equipo.categoria', 'equipo.campeonato'],
-        });
+      const existeJugador = await this.jugadorRepository.findOne({
+        where: {
+          cedula: row.cedula,
+          equipo: {
+            id: equipoId,
+            categoria: { id: categoriaId },
+            campeonato: { id: campeonatoId },
+          },
+        },
+        relations: ['equipo', 'equipo.categoria', 'equipo.campeonato'],
+      });
 
-        if (existeJugador) {
-            // Si el jugador ya existe, agregarlo a la lista de ignorados
-            ignorados.push(row.cedula);
-            console.warn(`⚠️ Fila ${index + 2} ignorada: El jugador con cédula ${row.cedula} ya existe en el equipo.`);
-        } else {
-            let fechaNacimiento: Date | null = null;
+      if (existeJugador) {
+        // Si el jugador ya existe, agregarlo a la lista de ignorados
+        ignorados.push(row.cedula);
+        console.warn(`⚠️ Fila ${index + 2} ignorada: El jugador con cédula ${row.cedula} ya existe en el equipo.`);
+      } else {
+        let fechaNacimiento: Date | null = null;
 
-            // Convertir fecha si viene en formato numérico (Excel date format)
-            if (row.fecha_nacimiento && !isNaN(Number(row.fecha_nacimiento))) {
-                const parsedDate = XLSX.SSF.parse_date_code(Number(row.fecha_nacimiento));
-                if (parsedDate) {
-                    fechaNacimiento = new Date(parsedDate.y, parsedDate.m - 1, parsedDate.d);
-                }
-            } else if (typeof row.fecha_nacimiento === 'string') {
-                fechaNacimiento = new Date(row.fecha_nacimiento);
-            }
-
-            // Si no existe, crearlo
-            jugadores.push(
-                this.jugadorRepository.create({
-                    cedula: row.cedula,
-                    nombres: String(row.nombres).toUpperCase(),
-                    apellidos: String(row.apellidos).toUpperCase(),
-                    fecha_nacimiento: fechaNacimiento,
-                    canton_juega: row.canton_juega ? String(row.canton_juega).toUpperCase() : null,
-                    direccion: row.direccion ? String(row.direccion).toUpperCase() : null,
-                    telefono: row.telefono,
-                    email: row.email,
-                    origen: OrigenJugador.Nacional,
-                    equipo,
-                    foto: row.foto || null,
-                    dorsal: 0
-                })
-            );
+        // Convertir fecha si viene en formato numérico (Excel date format)
+        if (row.fecha_nacimiento && !isNaN(Number(row.fecha_nacimiento))) {
+          const parsedDate = XLSX.SSF.parse_date_code(Number(row.fecha_nacimiento));
+          if (parsedDate) {
+            fechaNacimiento = new Date(parsedDate.y, parsedDate.m - 1, parsedDate.d);
+          }
+        } else if (typeof row.fecha_nacimiento === 'string') {
+          fechaNacimiento = new Date(row.fecha_nacimiento);
         }
+
+        // Si no existe, crearlo
+        jugadores.push(
+          this.jugadorRepository.create({
+            cedula: row.cedula,
+            nombres: String(row.nombres).toUpperCase(),
+            apellidos: String(row.apellidos).toUpperCase(),
+            fecha_nacimiento: fechaNacimiento,
+            canton_juega: row.canton_juega ? String(row.canton_juega).toUpperCase() : null,
+            direccion: row.direccion ? String(row.direccion).toUpperCase() : null,
+            telefono: row.telefono,
+            email: row.email,
+            origen: OrigenJugador.Nacional,
+            equipo,
+            foto: row.foto || null,
+            dorsal: 0
+          })
+        );
+      }
     }
 
     // Guardar los jugadores que no se repiten
     if (jugadores.length > 0) {
-        await this.jugadorRepository.save(jugadores);
+      await this.jugadorRepository.save(jugadores);
     }
 
     // Mensaje final con detalles de los ignorados
     return {
-        message: `Jugadores importados exitosamente. Ignorados: ${ignorados.length}`,
-        ignorados,
+      message: `Jugadores importados exitosamente. Ignorados: ${ignorados.length}`,
+      ignorados,
     };
-}
-
-
+  }
 
 
 }
