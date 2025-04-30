@@ -148,7 +148,7 @@ export class CampeonatosService {
     }
   }
 
-  private generarPartidosTodosContraTodos(equipos: Equipo[], fase: Fase): Partido[] {
+  public generarPartidosTodosContraTodos(equipos: Equipo[], fase: Fase): Partido[] {
     const partidos: Partido[] = [];
     const totalEquipos = equipos.length;
 
@@ -196,7 +196,7 @@ export class CampeonatosService {
   }
 
 
-  private generarPartidosPorGrupo(equipos: Equipo[], fase: Fase): Partido[] {
+  public generarPartidosPorGrupo(equipos: Equipo[], fase: Fase): Partido[] {
     return this.generarPartidosTodosContraTodos(equipos, fase);
   }
 

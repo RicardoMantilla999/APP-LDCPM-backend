@@ -259,24 +259,24 @@ describe('JugadoresService - create()', () => {
   it('debería importar jugadores desde archivo Excel correctamente', async () => {
     const mockBuffer = Buffer.from('fake-excel');
     const mockFile = { buffer: mockBuffer } as Express.Multer.File;
-  
+
     const equipo = {
       id: 1,
       nombre: 'Juventud FC',
       categoria: { id: 10 },
       campeonato: { id: 100 },
     };
-  
+
     equipoRepo.findOne.mockResolvedValue(equipo);
     jugadorRepo.findOne.mockResolvedValue(null);
     jugadorRepo.create.mockReturnValue({ cedula: '111', nombres: 'CARLOS', apellidos: 'PÉREZ', equipo });
     jugadorRepo.save.mockResolvedValue({});
-  
+
     (XLSX.read as jest.Mock).mockReturnValue({ Sheets: { Hoja1: {} }, SheetNames: ['Hoja1'] });
     XLSX.utils.sheet_to_json = jest.fn().mockReturnValue([
       { cedula: '111', nombres: 'Carlos', apellidos: 'Pérez', fecha_nacimiento: '2000-01-01', canton_juega: 'Tabacundo', direccion: 'Av. Quito', telefono: '0991234567', email: 'test@mail.com' },
     ]);
-  
+
     const resultado = await service.importarJugadores(mockFile, 1);
     expect(resultado.message).toContain('importados exitosamente');
   });
@@ -284,15 +284,15 @@ describe('JugadoresService - create()', () => {
 
   it('debería ignorar jugadores con cédula duplicada en el equipo', async () => {
     const mockFile = { buffer: Buffer.from('fake') } as Express.Multer.File;
-  
+
     (XLSX.read as jest.Mock).mockReturnValue({ Sheets: { Hoja1: {} }, SheetNames: ['Hoja1'] });
     XLSX.utils.sheet_to_json = jest.fn().mockReturnValue([
       { cedula: '123', nombres: 'Juan', apellidos: 'Lopez', fecha_nacimiento: '1990-01-01', canton_juega: 'Tabacundo', direccion: '', telefono: '', email: '' },
     ]);
-  
+
     equipoRepo.findOne.mockResolvedValue({ id: 1, categoria: { id: 10 }, campeonato: { id: 100 } });
     jugadorRepo.findOne.mockResolvedValue({ id: 1 });
-  
+
     const resultado = await service.importarJugadores(mockFile, 1);
     expect(resultado.ignorados).toContain('123');
   });
@@ -300,16 +300,16 @@ describe('JugadoresService - create()', () => {
 
   it('debería lanzar error si faltan columnas requeridas', async () => {
     const mockFile = { buffer: Buffer.from('fake') } as Express.Multer.File;
-  
+
     (XLSX.read as jest.Mock).mockReturnValue({ Sheets: { Hoja1: {} }, SheetNames: ['Hoja1'] });
     XLSX.utils.sheet_to_json = jest.fn().mockReturnValue([{ nombres: 'Sin Cédula' }]);
-  
+
     await expect(service.importarJugadores(mockFile, 1)).rejects.toThrow('El archivo no contiene las siguientes columnas obligatorias');
   });
 
   it('debería lanzar error si no hay datos válidos para importar', async () => {
     const mockFile = { buffer: Buffer.from('fake') } as Express.Multer.File;
-  
+
     (XLSX.read as jest.Mock).mockReturnValue({ Sheets: { Hoja1: {} }, SheetNames: ['Hoja1'] });
     XLSX.utils.sheet_to_json = jest.fn().mockReturnValue([
       {
@@ -323,8 +323,57 @@ describe('JugadoresService - create()', () => {
         email: 'juan@mail.com',
       },
     ]);
-  
+
     await expect(service.importarJugadores(mockFile, 1)).rejects.toThrow('No hay datos válidos para importar.');
   });
+
+
+  it('debería retornar el historial del jugador si existe', async () => {
+    const jugadorMock = {
+      id: 1,
+      cedula: '1234567890',
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      equipo: {
+        nombre: 'Equipo A',
+        categoria: { categoria: 'Sub-18' },
+        campeonato: { fecha_inicio: '2023-01-01' },
+      },
+    };
+
+    const golesMock = [
+      { goles: 2, jugador: jugadorMock },
+    ];
+
+    const tarjetasMock = [
+      { tipo: 'Amarilla', jugador: jugadorMock },
+    ];
+
+    jugadorRepo.findOne.mockResolvedValue(jugadorMock);
+    golRepo.find.mockResolvedValue(golesMock);
+    tarjetaRepo.find.mockResolvedValue(tarjetasMock);
+
+    const historial = await service.obtenerHistorialPorCedula('1234567890');
+
+    expect(historial).toHaveLength(1);
+    expect(historial[0]).toMatchObject({
+      temporada: 2022,
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      equipo: 'Equipo A',
+      categoria: 'Sub-18',
+      goles: 2,
+      amarillas: 0,
+      rojas: 0,
+    });
+  });
+
+  it('debería lanzar error si no se encuentra un jugador con esa cédula', async () => {
+    jugadorRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.obtenerHistorialPorCedula('9999999999')).rejects.toThrow('No se encontró un jugador con la cédula especificada.');
+  });
+
+
 
 });

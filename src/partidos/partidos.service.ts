@@ -28,8 +28,6 @@ export class PartidosService {
 
 
 
-
-
   async findAll(fase: number, categoria: number, fecha: number) {
     return await this.partidoRepository.find({
       where: {
