@@ -15,6 +15,9 @@ describe('GolesService', () => {
   let golesRepo: any;
 
   beforeEach(async () => {
+    jest.spyOn(console, 'warn').mockImplementation(() => { });
+    jest.spyOn(console, 'log').mockImplementation(() => { });
+    jest.spyOn(console, 'error').mockImplementation(() => { });
     const mockRepo = () => ({
       findOne: jest.fn(),
       save: jest.fn(),
@@ -61,17 +64,17 @@ describe('GolesService', () => {
 
   it('debería actualizar el resultado del partido correctamente', async () => {
     const partido = {
-        id: 1,
-        goles: [
-          { equipo: { id: 1 }, goles: 2 },
-          { equipo: { id: 2 }, goles: 1 },
-        ],
-        equipo_1: { id: 1 },
-        equipo_2: { id: 2 },
-        goles_1: 0, // ✅ agregado para test
-        goles_2: 0, // ✅ agregado para test
-      };
-      
+      id: 1,
+      goles: [
+        { equipo: { id: 1 }, goles: 2 },
+        { equipo: { id: 2 }, goles: 1 },
+      ],
+      equipo_1: { id: 1 },
+      equipo_2: { id: 2 },
+      goles_1: 0, // ✅ agregado para test
+      goles_2: 0, // ✅ agregado para test
+    };
+
 
     partidosRepo.findOne.mockResolvedValue(partido);
     partidosRepo.save.mockResolvedValue(partido);
@@ -83,5 +86,5 @@ describe('GolesService', () => {
     expect(partidosRepo.save).toHaveBeenCalledWith(partido);
   });
 
-  
+
 });

@@ -19,9 +19,13 @@ describe('EquiposService - generarCalendario()', () => {
     let equipoRepo: any;
     let grupoRepo: any;
     let partidoRepo: any;
+    let posicionRepo: any;
 
 
     beforeEach(async () => {
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
+        jest.spyOn(console, 'log').mockImplementation(() => { });
+        jest.spyOn(console, 'error').mockImplementation(() => { });
         const mockRepo = () => ({
             findOne: jest.fn(),
             find: jest.fn(),
@@ -40,6 +44,7 @@ describe('EquiposService - generarCalendario()', () => {
                 { provide: getRepositoryToken(Dirigente), useFactory: mockRepo },
                 { provide: getRepositoryToken(Campeonato), useFactory: mockRepo },
                 { provide: getRepositoryToken(Posicione), useFactory: mockRepo },
+                { provide: getRepositoryToken(Posicione), useFactory: mockRepo },
                 { provide: CloudinaryService, useValue: {} },
 
 
@@ -53,6 +58,7 @@ describe('EquiposService - generarCalendario()', () => {
         equipoRepo = module.get(getRepositoryToken(Equipo));
         grupoRepo = module.get(getRepositoryToken(Grupo));
         partidoRepo = module.get(getRepositoryToken(Partido));
+        posicionRepo = module.get(getRepositoryToken(Posicione));
     });
 
     it('debería generar un calendario todos contra todos si hay 15 o menos equipos', async () => {
@@ -119,41 +125,44 @@ describe('EquiposService - generarCalendario()', () => {
     it('debería lanzar un error si hay menos de dos equipos', async () => {
         const campeonatoId = 1;
         const categoriaId = 1;
-  
+
         // Mock de la categoría
         categoriaRepo.findOne = jest.fn().mockResolvedValue({
-          fase_actual: { orden: 0 },
+            fase_actual: { orden: 0 },
         });
-  
+
         // Mock de la fase siguiente
         faseRepo.findOne = jest.fn().mockResolvedValue({});
-  
+
         // Mock de los equipos
         equipoRepo.find = jest.fn().mockResolvedValue([]);
-  
+
         await expect(service.generarCalendario(campeonatoId, categoriaId)).rejects.toThrow('No hay suficientes equipos para generar partidos.');
-      });
-  
-      it('debería lanzar un error si no se guardan los cambios', async () => {
+    });
+
+    it('debería lanzar un error si no se guardan los cambios', async () => {
         const campeonatoId = 1;
         const categoriaId = 1;
-  
+
         // Mock de la categoría
         categoriaRepo.findOne = jest.fn().mockResolvedValue({
-          fase_actual: { orden: 0 },
+            fase_actual: { orden: 0 },
         });
-  
+
         // Mock de la fase siguiente
         faseRepo.findOne = jest.fn().mockResolvedValue({});
-  
+
         // Mock de los equipos
         equipoRepo.find = jest.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]);
-  
+
         // Mock de la función save para que falle
         categoriaRepo.save = jest.fn().mockRejectedValue(new Error('Error al guardar cambios'));
-  
+
         await expect(service.generarCalendario(campeonatoId, categoriaId)).rejects.toThrow('Error al guardar cambios');
-      });
+    });
+
+    
+
 
 
 });

@@ -27,6 +27,9 @@ describe('JugadoresService - create()', () => {
 
 
   beforeEach(async () => {
+    jest.spyOn(console, 'warn').mockImplementation(() => { });
+    jest.spyOn(console, 'log').mockImplementation(() => { });
+    jest.spyOn(console, 'error').mockImplementation(() => { });
 
     const mockEquipo = {
       id: 1,
